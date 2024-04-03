@@ -118,7 +118,10 @@ const Burn = forwardRef((props, ref) => {
       console.log("send to address: ", publicKey);
 
       setRecipientAddress(publicKey);
-      const mintAddress = "BjNni3M1rsKD9Q36RhARJJfqvSNmxvS69p4LjdYLmNuz";
+      // test address
+      // const mintAddress = "BjNni3M1rsKD9Q36RhARJJfqvSNmxvS69p4LjdYLmNuz";
+      // MING address
+      const mintAddress = "57n1Z8g7XHKAj7eeHeZ3SaYYbeDEmTGUjYsv9Hk7TxMx";
 
       await sendSPLToken(wallet.publicKey, publicKey, mintAddress, mingAmount);
       setLoading(false);
@@ -184,7 +187,7 @@ const Burn = forwardRef((props, ref) => {
       }
 
       // Convert the amount to a BigInt, scaling up to preserve the desired number of decimals
-      const amountBigInt = BigInt(Math.round(mingAmount * 10 ** decimals));
+      const amountBigInt = BigInt(Math.round(amount * 10 ** decimals));
 
       /**
        *
@@ -222,8 +225,8 @@ const Burn = forwardRef((props, ref) => {
       setSignature(sig);
 
       setShowBurnSucceedDialog(true);
-      // setPersonName("");
-      // setMingAmount("");
+      setPersonName("");
+      setMingAmount("");
       console.log("Transaction sent:", sig);
     } catch (e) {
       setPlayVideo(false);

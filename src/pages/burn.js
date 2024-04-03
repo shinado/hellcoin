@@ -44,7 +44,7 @@ const Burn = forwardRef((props, ref) => {
   const [personName, setPersonName] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
   const [mingAmount, setMingAmount] = useState("");
-  const [showBurnSucceedDialog, setShowBurnSucceedDialog] = useState(true);
+  const [showBurnSucceedDialog, setShowBurnSucceedDialog] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);

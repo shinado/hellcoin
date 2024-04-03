@@ -1,8 +1,5 @@
 import React, { useState, useEffect, forwardRef } from "react";
-import { Tooltip } from "flowbite-react";
-import Link from "next/link";
 import ReactPlayer from "react-player";
-import i18next from "./i18n";
 import LoadingText from "./LoadingText";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
@@ -27,15 +24,24 @@ import {
   createTransferInstruction,
   createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
+import BurnSucceedDialog from "./BurnSucceedDialog";
 
 const Burn = forwardRef((props, ref) => {
   const wallet = useWallet();
   const [playVideo, setPlayVideo] = useState(false);
+  const [signature, setSignature] = useState("");
 
   const [personName, setPersonName] = useState("");
+  const [recipientAddress, setRecipientAddress] = useState("");
   const [mingAmount, setMingAmount] = useState("");
+  const [showBurnSucceedDialog, setShowBurnSucceedDialog] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+
+  useEffect(() => {
+    setIsWalletConnected(wallet.connected)
+  }, [wallet.connected]);
 
   const bs58 = require("bs58");
 
@@ -111,18 +117,10 @@ const Burn = forwardRef((props, ref) => {
       const publicKey = transformToFixedBase58(personName);
       console.log("send to address: ", publicKey);
 
-      const recipientAddress = publicKey;
+      setRecipientAddress(publicKey);
       const mintAddress = "BjNni3M1rsKD9Q36RhARJJfqvSNmxvS69p4LjdYLmNuz";
 
-      await sendSPLToken(
-        wallet.publicKey,
-        //  Centra1BankofUnderWor1d444444444444444444444
-        // 'HExZDErmg9cgvETA8vnLgAYoMzeHtxrAbzpZjJgd4BxP',
-        // '7SttTKZbN1XKnjnbFEFtx8uHSQTUW94Z4Je2uAxWMHJh',
-        recipientAddress,
-        mintAddress,
-        mingAmount
-      );
+      await sendSPLToken(wallet.publicKey, publicKey, mintAddress, mingAmount);
       setLoading(false);
 
       //finished
@@ -143,7 +141,7 @@ const Burn = forwardRef((props, ref) => {
         "https://wiser-evocative-season.solana-mainnet.quiknode.pro/c703e8fe265b859cdde46e6b89f792b5573a3b98/"; //主网
       const connection = new Connection(netWork, "recent");
 
-      const decimals = 10000000;
+      const decimals = 100000000;
       const mintPubKey = new PublicKey(mintAddress);
       const fromPubkey = new PublicKey(senderAddress);
       const toPubkey = new PublicKey(recipientAddress);
@@ -207,17 +205,26 @@ const Burn = forwardRef((props, ref) => {
       tx.feePayer = fromPubkey; // 付款人
 
       const signedTransaction = await wallet.signTransaction(tx);
-      const signature = await connection.sendRawTransaction(
+
+      setPlayVideo(true);
+      const sig = await connection.sendRawTransaction(
         signedTransaction.serialize()
       );
 
       await connection.confirmTransaction({
-        signature: signature,
+        signature: sig,
         strategy: "confirmed", // or another strategy as per the documentation
       });
+      setPlayVideo(false);
+      setSignature(sig);
 
-      console.log("Transaction sent:", signature);
+      setShowBurnSucceedDialog(true);
+      setPersonName("");
+      setMingAmount("");
+      console.log("Transaction sent:", sig);
     } catch (e) {
+      setPlayVideo(false);
+      // show error
       console.log(e);
     }
   }
@@ -231,7 +238,7 @@ const Burn = forwardRef((props, ref) => {
           position: "absolute",
           width: "100%",
           height: "100%",
-          overflow: "hidden", // Prevent content from spilling out when height is 0
+          overflow: "hidden",
         }}
         className={playVideo ? "fadeIn" : "fadeOut"}
       >
@@ -248,7 +255,6 @@ const Burn = forwardRef((props, ref) => {
       </div>
 
       {playVideo && (
-        //help me GPT: set the div's height to 100% of the parent
         <div
           className={baseClassName}
           style={{
@@ -259,13 +265,7 @@ const Burn = forwardRef((props, ref) => {
           }}
         >
           <LoadingText
-            textArray={[
-              i18next.t("burning.loading.1"),
-              i18next.t("burning.loading.2"),
-              i18next.t("burning.loading.3"),
-              i18next.t("burning.loading.4"),
-              i18next.t("burning.loading.5"),
-            ]}
+            textArray={["正在烧给鬼魂地址...","等待地府银行确认交易...","地府银行确认交易...","等待交易确认..."]}
             style={{
               position: "relative",
             }}
@@ -276,26 +276,24 @@ const Burn = forwardRef((props, ref) => {
       <div className={(playVideo ? "fadeOut" : "fadeIn") + className}>
         {/* set max width for this div */}
         <div className="w-full max-w-3xl text-center">
-          <h2 className="text-5xl font-extrabold text-white">
-            {i18next.t("home.burn.title")}
-          </h2>
+          <h2 className="text-5xl font-extrabold text-white">赛博祭祖</h2>
           <p className="mt-4 text-lg text-white">
-            {i18next.t("home.burn.sub")}
+            烧给祖先、神明、已故的公众人物.
           </p>
-          <p className="text-base text-white-500">
+          {/* <p className="text-base text-white-500">
             {i18next.t("home.burn.content.dk")}
             <Link href="/deaderboard">
               {i18next.t("home.burn.content.deaderboard")}
             </Link>
-          </p>
+          </p> */}
 
           <div className="mt-8">
             <p className="mt-1 text-md font-bold text-white text-left">
-              {i18next.t("home.burn.form.name")}
+              烧给
             </p>
             <input
               type="text"
-              placeholder={i18next.t("home.burn.form.name.hint")}
+              placeholder="秦始皇"
               // className="border border-gray-300 rounded-md shadow-sm text-white"
               className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
               value={personName}
@@ -303,12 +301,12 @@ const Burn = forwardRef((props, ref) => {
             />
             {personName && (
               <p className="text-left text-sm">
-                烧给地址: {transformToFixedBase58(personName)}
+                转入地址: {transformToFixedBase58(personName)}
               </p>
             )}
 
             <p className="mt-4 text-md font-bold text-white text-left">
-              {i18next.t("home.burn.form.amount")}
+              数量
             </p>
             <input
               type="number"
@@ -319,11 +317,12 @@ const Burn = forwardRef((props, ref) => {
               onChange={(e) => setMingAmount(e.target.value)}
             />
 
-            {!wallet.connected && <WalletMultiButton className="mt-8" />}
+            {!isWalletConnected && <WalletMultiButton className="mt-8" />}
             <p>
-              {wallet.connected && (
+              {isWalletConnected && (
                 <button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  disabled={loading || !personName || !mingAmount}
+                  className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
                   onClick={() => handleBurnClick()}
                 >
                   燃烧冥币
@@ -345,6 +344,17 @@ const Burn = forwardRef((props, ref) => {
           </div>
         </div>
       </div>
+
+      <BurnSucceedDialog
+        open={showBurnSucceedDialog}
+        name={personName}
+        addr={recipientAddress}
+        amount={mingAmount}
+        tx={signature}
+        handleClose={() => {
+          setShowBurnSucceedDialog(false);
+        }}
+      />
     </div>
   );
 });

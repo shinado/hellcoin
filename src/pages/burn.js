@@ -225,8 +225,8 @@ const Burn = forwardRef((props, ref) => {
       setSignature(sig);
 
       setShowBurnSucceedDialog(true);
-      setPersonName("");
-      setMingAmount("");
+      // setPersonName("");
+      // setMingAmount("");
       console.log("Transaction sent:", sig);
     } catch (e) {
       setPlayVideo(false);

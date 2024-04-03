@@ -7,12 +7,12 @@ const BurnSucceedDialog = ({ open, name, addr, amount, tx, handleClose }) => {
       <Modal.Header />
       <Modal.Body>
         <div className="">
-          <h3 className="text-2xl font-medium text-gray-900 dark:text-white">
-            大孝子认证
+          <h3 className="text-3xl font-medium text-gray-900 dark:text-white">
+            赛博祭祖
           </h3>
           {/* <div className="mt-2">{i18next.t("freemint.successful.body") + amount + " $MING! "}</div> */}
           <div className="mt-8 text-sm font-bold">
-            你给 {name} (地址：{addr}) 烧了{amount}个冥币。祖先觉得你是个大孝子并且保佑你牛市发大财
+            你给 {name} (地址：{addr}) 烧了{amount}个冥币。
           </div>
           <div className="text-sm mt-4">
             我们会给燃烧一定数量的地址空投NFT，请持续关注我们的

@@ -40,7 +40,7 @@ const Burn = forwardRef((props, ref) => {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
 
   useEffect(() => {
-    setIsWalletConnected(wallet.connected)
+    setIsWalletConnected(wallet.connected);
   }, [wallet.connected]);
 
   const bs58 = require("bs58");
@@ -141,7 +141,7 @@ const Burn = forwardRef((props, ref) => {
         "https://wiser-evocative-season.solana-mainnet.quiknode.pro/c703e8fe265b859cdde46e6b89f792b5573a3b98/"; //主网
       const connection = new Connection(netWork, "recent");
 
-      const decimals = 100000000;
+      const decimals = 8;
       const mintPubKey = new PublicKey(mintAddress);
       const fromPubkey = new PublicKey(senderAddress);
       const toPubkey = new PublicKey(recipientAddress);
@@ -183,6 +183,9 @@ const Burn = forwardRef((props, ref) => {
         console.log("create associated token account: ", tx);
       }
 
+      // Convert the amount to a BigInt, scaling up to preserve the desired number of decimals
+      const amountBigInt = BigInt(Math.round(mingAmount * 10 ** decimals));
+
       /**
        *
        * @param source       Source account
@@ -194,7 +197,7 @@ const Burn = forwardRef((props, ref) => {
         fromAssociatedTokenAddress, //发送者的associated token address
         destinationAssociatedTokenAddress, //接收者的associated token address
         fromPubkey, //发送者的地址
-        BigInt(amount) * BigInt(decimals) //数量
+        amountBigInt
       );
 
       //加入到transation
@@ -219,8 +222,8 @@ const Burn = forwardRef((props, ref) => {
       setSignature(sig);
 
       setShowBurnSucceedDialog(true);
-      setPersonName("");
-      setMingAmount("");
+      // setPersonName("");
+      // setMingAmount("");
       console.log("Transaction sent:", sig);
     } catch (e) {
       setPlayVideo(false);
@@ -265,7 +268,12 @@ const Burn = forwardRef((props, ref) => {
           }}
         >
           <LoadingText
-            textArray={["正在烧给鬼魂地址...","等待地府银行确认交易...","地府银行确认交易...","等待交易确认..."]}
+            textArray={[
+              "正在烧给鬼魂地址...",
+              "等待地府银行确认交易...",
+              "地府银行确认交易...",
+              "等待交易确认...",
+            ]}
             style={{
               position: "relative",
             }}
@@ -288,9 +296,7 @@ const Burn = forwardRef((props, ref) => {
           </p> */}
 
           <div className="mt-8">
-            <p className="mt-1 text-md font-bold text-white text-left">
-              烧给
-            </p>
+            <p className="mt-1 text-md font-bold text-white text-left">烧给</p>
             <input
               type="text"
               placeholder="秦始皇"
@@ -305,9 +311,7 @@ const Burn = forwardRef((props, ref) => {
               </p>
             )}
 
-            <p className="mt-4 text-md font-bold text-white text-left">
-              数量
-            </p>
+            <p className="mt-4 text-md font-bold text-white text-left">数量</p>
             <input
               type="number"
               placeholder="444444"

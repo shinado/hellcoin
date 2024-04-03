@@ -1,7 +1,6 @@
-// Filename: RotatingText.js
 import React, { useState, useEffect } from "react";
 
-const LoadingText = ({ textArray }) => {
+const LoadingText = ({ textArray = []}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {

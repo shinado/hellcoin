@@ -60,3 +60,8 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+
+.fadeInOut {
+  animation: fadeInOut 4s ease-in-out;
+}

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Button, Avatar, Dropdown, Navbar } from "flowbite-react";
-import i18next from "./i18n";
-import i18n from "i18next";
 
 function displayAddress(addr) {
   if (addr.length >= 10) {
@@ -37,7 +35,7 @@ export default function Navigation({ selected }) {
       <Navbar.Brand href="/">
         <img src="/ming_logo.png" className="mr-3 h-6 sm:h-9" alt="Logo" />
         <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
-          {i18next.t("nav.title")}
+          Solana冥币
         </span>
       </Navbar.Brand>
       

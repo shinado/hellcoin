@@ -16,7 +16,7 @@ const BurnSucceedDialog = ({ open, name, addr, amount, tx, handleClose }) => {
           </div>
           <div className="text-sm mt-4">
             我们会给燃烧一定数量的地址空投NFT，请持续关注我们的
-            <a className="text-red" href="https://twitter.com/ming_bi_xyz" target="_blank" rel="noopener noreferrer">官方推特</a>
+            <a className="text-blue-500" href="https://twitter.com/ming_bi_xyz" target="_blank" rel="noopener noreferrer">官方推特</a>
           </div>
 
           <div className="w-full flex mt-6">

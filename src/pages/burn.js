@@ -25,8 +25,18 @@ import {
   createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
 import BurnSucceedDialog from "./BurnSucceedDialog";
+import { Helmet } from "react-helmet";
 
 const Burn = forwardRef((props, ref) => {
+  useEffect(() => {
+    // Ensure the scripts are loaded before executing
+    if (window.pinyinUtil) {
+      console.log(window.pinyinUtil.getPinyin("小茗同学")); // 输出 'xiao ming tong xue'
+    } else {
+      console.log("pinyin not imported");
+    }
+  }, []);
+
   const wallet = useWallet();
   const [playVideo, setPlayVideo] = useState(false);
   const [signature, setSignature] = useState("");
@@ -34,7 +44,7 @@ const Burn = forwardRef((props, ref) => {
   const [personName, setPersonName] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
   const [mingAmount, setMingAmount] = useState("");
-  const [showBurnSucceedDialog, setShowBurnSucceedDialog] = useState(false);
+  const [showBurnSucceedDialog, setShowBurnSucceedDialog] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
@@ -46,7 +56,10 @@ const Burn = forwardRef((props, ref) => {
   const bs58 = require("bs58");
 
   const transformToFixedBase58 = (original) => {
-    const text = original
+    const pinyin = window.pinyinUtil.getPinyin(original).replaceAll(" ", "");
+    console.log("pinyin: ", pinyin);
+
+    const text = pinyin
       .replaceAll("l", "1")
       .replaceAll("L", "1")
       .replaceAll("0", "o")
@@ -225,8 +238,6 @@ const Burn = forwardRef((props, ref) => {
       setSignature(sig);
 
       setShowBurnSucceedDialog(true);
-      // setPersonName("");
-      // setMingAmount("");
       console.log("Transaction sent:", sig);
     } catch (e) {
       setPlayVideo(false);
@@ -239,6 +250,10 @@ const Burn = forwardRef((props, ref) => {
   const className = " bg-slate-900 px-4 sm:px-6 lg:px-8 py-10" + baseClassName;
   return (
     <div ref={ref} className="relative h-full md:h-screen">
+      <Helmet>
+        <script src="/pinyin_dict_notone.js" type="text/javascript" />
+        <script src="/pinyinUtil.js" type="text/javascript" />
+      </Helmet>
       <div
         style={{
           position: "absolute",
@@ -285,59 +300,71 @@ const Burn = forwardRef((props, ref) => {
       )}
 
       <div className={(playVideo ? "fadeOut" : "fadeIn") + className}>
-        {/* set max width for this div */}
-        <div className="w-full max-w-3xl text-center">
-          <h2 className="text-5xl font-extrabold text-white">赛博祭祖</h2>
-          <p className="mt-4 text-lg text-white">
-            烧给祖先、神明、已故的公众人物.
-          </p>
-          {/* <p className="text-base text-white-500">
+        <div
+          className="relative w-screen h-screen bg-cover bg-center"
+          style={{ backgroundImage: `url('/ming_bg.jpg')` }}
+        >
+          <div className="absolute inset-0 bg-[#330000] opacity-80"></div>
+
+          {/* Content */}
+
+          <div className="relative w-screen flex h-screen justify-center items-center text-center">
+            <div className="w-full max-w-xl text-center">
+              <h2 className="text-5xl font-extrabold text-white">赛博祭祖</h2>
+              <p className="mt-4 text-lg text-white">
+                烧给祖先、神明、已故的公众人物.
+              </p>
+              {/* <p className="text-base text-white-500">
             {i18next.t("home.burn.content.dk")}
             <Link href="/deaderboard">
               {i18next.t("home.burn.content.deaderboard")}
             </Link>
           </p> */}
 
-          <div className="mt-8">
-            <p className="mt-1 text-md font-bold text-white text-left">烧给</p>
-            <input
-              type="text"
-              placeholder="秦始皇"
-              // className="border border-gray-300 rounded-md shadow-sm text-white"
-              className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
-              value={personName}
-              onChange={(e) => setPersonName(e.target.value)}
-            />
-            {personName && (
-              <p className="text-left text-sm">
-                转入地址: {transformToFixedBase58(personName)}
-              </p>
-            )}
+              <div className="mt-8">
+                <p className="mt-1 text-md font-bold text-white text-left">
+                  烧给
+                </p>
+                <input
+                  type="text"
+                  placeholder="秦始皇"
+                  // className="border border-gray-300 rounded-md shadow-sm text-white"
+                  className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
+                  value={personName}
+                  onChange={(e) => setPersonName(e.target.value)}
+                />
+                {personName && (
+                  <p className="text-left text-sm">
+                    转入地址: {transformToFixedBase58(personName)}
+                  </p>
+                )}
 
-            <p className="mt-4 text-md font-bold text-white text-left">数量</p>
-            <input
-              type="number"
-              placeholder="444444"
-              className="mb-6 mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
-              // className="mt-2 p-3 block w-full border border-gray-300 rounded-md shadow-sm text-white"
-              value={mingAmount}
-              onChange={(e) => setMingAmount(e.target.value)}
-            />
+                <p className="mt-4 text-md font-bold text-white text-left">
+                  数量
+                </p>
+                <input
+                  type="number"
+                  placeholder="444444"
+                  className="mb-6 mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
+                  // className="mt-2 p-3 block w-full border border-gray-300 rounded-md shadow-sm text-white"
+                  value={mingAmount}
+                  onChange={(e) => setMingAmount(e.target.value)}
+                />
 
-            {!isWalletConnected && <WalletMultiButton className="mt-8" />}
-            <p>
-              {isWalletConnected && (
-                <button
-                  disabled={loading || !personName || !mingAmount}
-                  className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
-                  onClick={() => handleBurnClick()}
-                >
-                  燃烧冥币
-                </button>
-              )}
-            </p>
+                {!isWalletConnected && <WalletMultiButton className="mt-8" />}
+                <p>
+                  {isWalletConnected && (
+                    <button
+                      disabled={loading || !personName || !mingAmount}
+                      className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
+                      onClick={() => handleBurnClick()}
+                    >
+                      燃烧冥币
+                    </button>
+                  )}
+                </p>
 
-            {/* <div className="flex justify-center items-center ">
+                {/* <div className="flex justify-center items-center ">
               <Tooltip
                 className="mt-2 text-center max-w-3xl"
                 content={i18next.t("home.burn.form.learn.desc")}
@@ -348,6 +375,8 @@ const Burn = forwardRef((props, ref) => {
                 </p>
               </Tooltip>
             </div> */}
+              </div>
+            </div>
           </div>
         </div>
       </div>

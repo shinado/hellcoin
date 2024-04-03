@@ -251,8 +251,8 @@ const Burn = forwardRef((props, ref) => {
   return (
     <div ref={ref} className="relative h-full md:h-screen">
       <Helmet>
-        <script src="/pinyin_dict_notone.js" type="text/javascript" />
-        <script src="/pinyinUtil.js" type="text/javascript" />
+        <script defer src="/pinyin_dict_notone.js" type="text/javascript" />
+        <script defer src="/pinyinUtil.js" type="text/javascript" />
       </Helmet>
       <div
         style={{
@@ -312,7 +312,10 @@ const Burn = forwardRef((props, ref) => {
             <div className="w-full max-w-xl text-center">
               <h2 className="text-5xl font-extrabold text-white">赛博祭祖</h2>
               <p className="mt-4 text-lg text-white">
-                烧给祖先、神明、已故的公众人物.
+                烧给祖先、神明、已故的公众人物。🈲请勿烧给还在世的人🈲
+              </p>
+              <p className="mt-4 text-md text-white">
+                还没有冥币？从<a className="text-blue-500" href="https://v1.orca.so/" target="_blank" >池子里购买</a>。地址：57n1Z8g7XHKAj7eeHeZ3SaYYbeDEmTGUjYsv9Hk7TxMx
               </p>
               {/* <p className="text-base text-white-500">
             {i18next.t("home.burn.content.dk")}

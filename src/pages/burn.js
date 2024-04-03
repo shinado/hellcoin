@@ -25,18 +25,9 @@ import {
   createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
 import BurnSucceedDialog from "./BurnSucceedDialog";
-import { Helmet } from "react-helmet";
+import pinyinUtil from "../pinyin/pinyinUtil";
 
 const Burn = forwardRef((props, ref) => {
-  useEffect(() => {
-    // Ensure the scripts are loaded before executing
-    if (window.pinyinUtil) {
-      console.log(window.pinyinUtil.getPinyin("小茗同学")); // 输出 'xiao ming tong xue'
-    } else {
-      console.log("pinyin not imported");
-    }
-  }, []);
-
   const wallet = useWallet();
   const [playVideo, setPlayVideo] = useState(false);
   const [signature, setSignature] = useState("");
@@ -56,7 +47,7 @@ const Burn = forwardRef((props, ref) => {
   const bs58 = require("bs58");
 
   const transformToFixedBase58 = (original) => {
-    const pinyin = window.pinyinUtil.getPinyin(original).replaceAll(" ", "");
+    const pinyin = pinyinUtil.getPinyin(original).replaceAll(" ", "");
     console.log("pinyin: ", pinyin);
 
     const text = pinyin
@@ -250,10 +241,6 @@ const Burn = forwardRef((props, ref) => {
   const className = " bg-slate-900 px-4 sm:px-6 lg:px-8 py-10" + baseClassName;
   return (
     <div ref={ref} className="relative h-full md:h-screen">
-      <Helmet>
-        <script defer src="/pinyin_dict_notone.js" type="text/javascript" />
-        <script defer src="/pinyinUtil.js" type="text/javascript" />
-      </Helmet>
       <div
         style={{
           position: "absolute",

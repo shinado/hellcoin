@@ -26,6 +26,7 @@ import type {
   VersionedTransaction,
 } from '@solana/web3.js'
 import { PublicKey } from '@solana/web3.js'
+import { Toaster, toast } from "react-hot-toast";
 
 interface PhantomWalletEvents {
   connect(...args: unknown[]): unknown
@@ -101,8 +102,10 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
     //     })
     //   }
     // }
+    toast.success('call constructor')
 
     scopePollingDetectionStrategy(() => {
+      toast.success('detected')
       if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) {
         if(this.isIOS()){
           //auto connect

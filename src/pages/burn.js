@@ -30,6 +30,7 @@ import {
 import BurnSucceedDialog from "./BurnSucceedDialog";
 import pinyinUtil from "../pinyin/pinyinUtil";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
+import { Toaster, toast } from "react-hot-toast";
 
 const Burn = forwardRef((props, ref) => {
   const wallet = useWallet();
@@ -128,10 +129,10 @@ const Burn = forwardRef((props, ref) => {
       .writeText(recipientAddress)
       .then(() => {
         setShowCopiedToast(true);
-        console.log('address copied');
+        console.log("address copied");
       })
       .catch((err) => {
-        console.log('copy address error', err);
+        console.log("copy address error", err);
       });
   };
 
@@ -409,16 +410,6 @@ const Burn = forwardRef((props, ref) => {
               </div>
             </div>
           </div>
-
-          {/* {showCopiedToast && ( */}
-          <Toast className="relative">
-            <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500 dark:bg-green-800 dark:text-green-200">
-              <HiCheck className="h-5 w-5" />
-            </div>
-            <div className="ml-3 text-sm font-normal">地址已复制到剪切板</div>
-            <Toast.Toggle />
-          </Toast>
-          {/* )} */}
         </div>
       </div>
 
@@ -432,6 +423,8 @@ const Burn = forwardRef((props, ref) => {
           setShowBurnSucceedDialog(false);
         }}
       />
+
+      <Toaster position="top-right" reverseOrder={false} />
     </div>
   );
 });

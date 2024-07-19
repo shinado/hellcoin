@@ -154,7 +154,6 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
 
       this._connecting = true
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const wallet = window.phantom?.solana || window.solana!
 
       if (!wallet.isConnected) {

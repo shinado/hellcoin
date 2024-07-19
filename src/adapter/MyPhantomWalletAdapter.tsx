@@ -104,8 +104,14 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     scopePollingDetectionStrategy(() => {
       if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) {
-        this._readyState = WalletReadyState.Installed
-        this.emit('readyStateChange', this._readyState)
+        if(this.isIOS()){
+          //auto connect
+          this.connect()
+        }else{
+          this._readyState = WalletReadyState.Installed
+          this.emit('readyStateChange', this._readyState)
+        }
+        
         return true
       }
 

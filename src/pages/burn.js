@@ -3,6 +3,9 @@ import ReactPlayer from "react-player";
 import LoadingText from "./LoadingText";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { HiCheck, HiExclamation, HiX } from "react-icons/hi";
+
+import { Toast } from "flowbite-react";
 
 import { Program, AnchorProvider, BN } from "@project-serum/anchor";
 import {
@@ -26,6 +29,7 @@ import {
 } from "@solana/spl-token";
 import BurnSucceedDialog from "./BurnSucceedDialog";
 import pinyinUtil from "../pinyin/pinyinUtil";
+import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 
 const Burn = forwardRef((props, ref) => {
   const wallet = useWallet();
@@ -39,6 +43,7 @@ const Burn = forwardRef((props, ref) => {
 
   const [loading, setLoading] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [showCopiedToast, setShowCopiedToast] = useState(false);
 
   useEffect(() => {
     setIsWalletConnected(wallet.connected);
@@ -80,7 +85,11 @@ const Burn = forwardRef((props, ref) => {
     }
 
     const address = output.slice(0, 44);
-    return findValidAddress(address);
+    const publicKey = findValidAddress(address);
+
+    setRecipientAddress(publicKey);
+
+    return publicKey;
   };
 
   const findValidAddress = (address) => {
@@ -114,20 +123,33 @@ const Burn = forwardRef((props, ref) => {
     return tryNextChar(currentIndex);
   };
 
+  const copyAddress = () => {
+    navigator.clipboard
+      .writeText(recipientAddress)
+      .then(() => {
+        setShowCopiedToast(true);
+        console.log('address copied');
+      })
+      .catch((err) => {
+        console.log('copy address error', err);
+      });
+  };
+
   const handleBurnClick = async () => {
     setLoading(true);
 
     try {
-      const publicKey = transformToFixedBase58(personName);
-      console.log("send to address: ", publicKey);
-
-      setRecipientAddress(publicKey);
       // test address
       // const mintAddress = "BjNni3M1rsKD9Q36RhARJJfqvSNmxvS69p4LjdYLmNuz";
       // MING address
       const mintAddress = "57n1Z8g7XHKAj7eeHeZ3SaYYbeDEmTGUjYsv9Hk7TxMx";
 
-      await sendSPLToken(wallet.publicKey, publicKey, mintAddress, mingAmount);
+      await sendSPLToken(
+        wallet.publicKey,
+        recipientAddress,
+        mintAddress,
+        mingAmount
+      );
       setLoading(false);
 
       //finished
@@ -294,7 +316,6 @@ const Burn = forwardRef((props, ref) => {
           <div className="absolute inset-0 bg-[#330000] opacity-80"></div>
 
           {/* Content */}
-
           <div className="relative w-screen flex h-screen justify-center items-center text-center">
             <div className="w-full max-w-xl text-center">
               <h2 className="text-5xl font-extrabold text-white">赛博祭祖</h2>
@@ -302,7 +323,15 @@ const Burn = forwardRef((props, ref) => {
                 烧给祖先、神明、已故的公众人物。🈲请勿烧给还在世的人🈲
               </p>
               <p className="mt-4 text-md text-white">
-                还没有冥币？从<a className="text-blue-500" href="https://v1.orca.so/" target="_blank" >池子里购买</a>。地址：57n1Z8g7XHKAj7eeHeZ3SaYYbeDEmTGUjYsv9Hk7TxMx
+                还没有冥币？从
+                <a
+                  className="text-blue-500"
+                  href="https://v1.orca.so/"
+                  target="_blank"
+                >
+                  池子里购买
+                </a>
+                。地址：57n1Z8g7XHKAj7eeHeZ3SaYYbeDEmTGUjYsv9Hk7TxMx
               </p>
               {/* <p className="text-base text-white-500">
             {i18next.t("home.burn.content.dk")}
@@ -344,13 +373,25 @@ const Burn = forwardRef((props, ref) => {
                 {!isWalletConnected && <WalletMultiButton className="mt-8" />}
                 <p>
                   {isWalletConnected && (
-                    <button
-                      disabled={loading || !personName || !mingAmount}
-                      className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
-                      onClick={() => handleBurnClick()}
-                    >
-                      燃烧冥币
-                    </button>
+                    <div>
+                      <button
+                        disabled={loading || !personName || !mingAmount}
+                        className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
+                        onClick={() => handleBurnClick()}
+                      >
+                        燃烧冥币
+                      </button>
+                      <div>
+                        或者
+                        <a
+                          className="text-blue-200 cursor-pointer"
+                          onClick={() => copyAddress()}
+                        >
+                          复制地址
+                        </a>
+                        ，通过钱包转入冥币。
+                      </div>
+                    </div>
                   )}
                 </p>
 
@@ -368,6 +409,16 @@ const Burn = forwardRef((props, ref) => {
               </div>
             </div>
           </div>
+
+          {/* {showCopiedToast && ( */}
+          <Toast className="relative">
+            <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500 dark:bg-green-800 dark:text-green-200">
+              <HiCheck className="h-5 w-5" />
+            </div>
+            <div className="ml-3 text-sm font-normal">地址已复制到剪切板</div>
+            <Toast.Toggle />
+          </Toast>
+          {/* )} */}
         </div>
       </div>
 

@@ -5,7 +5,7 @@ import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react
 import { PhantomWalletAdapter, SolletWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
-import { MyPhantomWalletAdapter } from "./MyPhantomWalletAdapter";
+import { MyPhantomWalletAdapter } from "../adapter/MyPhantomWalletAdapter";
 
 
 // You must import the CSS somewhere to use the pre-built React UI components

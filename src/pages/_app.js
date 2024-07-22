@@ -1,16 +1,22 @@
 import "@/styles/globals.css";
-import { useMemo, useEffect } from 'react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { PhantomWalletAdapter, SolletWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { clusterApiUrl } from '@solana/web3.js';
+import { useMemo, useEffect } from "react";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from "@solana/wallet-adapter-react";
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  SolletWalletAdapter,
+} from "@solana/wallet-adapter-wallets";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import { clusterApiUrl } from "@solana/web3.js";
 import { MyPhantomWalletAdapter } from "@/adapter/MyPhantomWalletAdapter";
 import { Toaster } from "react-hot-toast";
 
-
 // You must import the CSS somewhere to use the pre-built React UI components
-require('@solana/wallet-adapter-react-ui/styles.css');
+require("@solana/wallet-adapter-react-ui/styles.css");
 
 function App({ Component, pageProps }) {
   useEffect(() => {
@@ -28,12 +34,7 @@ function App({ Component, pageProps }) {
 
   // Memoize the configuration to prevent unnecessary re-renders
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-  const wallets = useMemo(
-    () => [
-      new (MyPhantomWalletAdapter),
-    ],
-    [network]
-  );
+  const wallets = useMemo(() => [new MyPhantomWalletAdapter(), new SolflareWalletAdapter()], [network]);
 
   return (
     <ConnectionProvider endpoint={endpoint}>

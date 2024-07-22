@@ -95,33 +95,50 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
     this._wallet = null;
     this._publicKey = null;
 
-    scopePollingDetectionStrategy(() => {
-      if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) {
-        this._readyState = WalletReadyState.Installed;
-        this.emit("readyStateChange", this._readyState);
-
-        if (this.isIOS()) {
-          console.log("detected. auto connect");
-          setTimeout(() => {
-            this.autoConnect();
-          }, 2000); 
-        } else {
-          console.log("detected. not iOS");
-        }
-
-        return true;
-      }
-
-      if (this.isIOS()) {
-        console.log("not detected. is iOS");
+    if (this._readyState !== WalletReadyState.Unsupported) {
+      if (isIosAndRedirectable()) {
         // when in iOS (not webview), set Phantom as loadable instead of checking for install
         this._readyState = WalletReadyState.Loadable;
         this.emit("readyStateChange", this._readyState);
-        return true;
+      } else {
+        scopePollingDetectionStrategy(() => {
+          if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) {
+            this._readyState = WalletReadyState.Installed;
+            this.emit("readyStateChange", this._readyState);
+            return true;
+          }
+          return false;
+        });
       }
+    }
 
-      return false;
-    });
+    // scopePollingDetectionStrategy(() => {
+    //   if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) {
+    //     this._readyState = WalletReadyState.Installed;
+    //     this.emit("readyStateChange", this._readyState);
+
+    //     if (this.isIOS()) {
+    //       console.log("detected. auto connect");
+    //       setTimeout(() => {
+    //         this.autoConnect();
+    //       }, 2000);
+    //     } else {
+    //       console.log("detected. not iOS");
+    //     }
+
+    //     return true;
+    //   }
+
+    //   if (this.isIOS()) {
+    //     console.log("not detected. is iOS");
+    //     // when in iOS (not webview), set Phantom as loadable instead of checking for install
+    //     this._readyState = WalletReadyState.Loadable;
+    //     this.emit("readyStateChange", this._readyState);
+    //     return true;
+    //   }
+
+    //   return false;
+    // });
   }
 
   get publicKey() {
@@ -153,7 +170,7 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
         // this will open the current URL in the Phantom in-wallet browser
         const url = encodeURIComponent(window.location.href);
         const ref = encodeURIComponent(window.location.origin);
-        window.location.href = `https://phantom.app/ul/browse/${url}?ref=${ref}`;
+        window.location.href = `https://google.com/search?q=${url}`;//`https://phantom.app/ul/browse/${url}?ref=${ref}`;
         return;
       }
 

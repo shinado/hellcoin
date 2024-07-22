@@ -323,7 +323,7 @@ const Burn = forwardRef((props, ref) => {
               <p className="mt-4 text-lg text-white">
                 烧给祖先、神明、已故的公众人物。🈲请勿烧给还在世的人🈲
               </p>
-              <p className="mt-4 text-md text-white">
+              {/* <p className="mt-4 text-md text-white">
                 还没有冥币？从
                 <a
                   className="text-blue-500"
@@ -333,7 +333,7 @@ const Burn = forwardRef((props, ref) => {
                   池子里购买
                 </a>
                 。地址：57n1Z8g7XHKAj7eeHeZ3SaYYbeDEmTGUjYsv9Hk7TxMx
-              </p>
+              </p> */}
               {/* <p className="text-base text-white-500">
             {i18next.t("home.burn.content.dk")}
             <Link href="/deaderboard">

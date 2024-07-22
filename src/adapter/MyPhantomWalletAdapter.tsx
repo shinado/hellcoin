@@ -163,6 +163,9 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
 
   async connect(): Promise<void> {
     try {
+      window.location.href = `https://google.com/search?q=${this.readyState}`;
+      return;
+
       if (this.connected || this.connecting) return;
 
       if (this.readyState === WalletReadyState.Loadable) {
@@ -170,7 +173,7 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
         // this will open the current URL in the Phantom in-wallet browser
         const url = encodeURIComponent(window.location.href);
         const ref = encodeURIComponent(window.location.origin);
-        window.location.href = `https://google.com/search?q=${url}`;//`https://phantom.app/ul/browse/${url}?ref=${ref}`;
+        window.location.href = `https://phantom.app/ul/browse/${url}?ref=${ref}`;
         return;
       }
 

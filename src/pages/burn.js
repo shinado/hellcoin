@@ -423,8 +423,6 @@ const Burn = forwardRef((props, ref) => {
           setShowBurnSucceedDialog(false);
         }}
       />
-
-      <Toaster position="top-right" reverseOrder={false} />
     </div>
   );
 });

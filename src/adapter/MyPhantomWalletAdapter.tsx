@@ -95,41 +95,25 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
     this._wallet = null;
     this._publicKey = null;
 
-    // if (this._readyState !== WalletReadyState.Unsupported) {
-    //   if (this.isIOS()) {
-    //     // when in iOS (not webview), set Phantom as loadable instead of checking for install
-    //     this._readyState = WalletReadyState.Loadable
-    //     this.emit('readyStateChange', this._readyState)
-    //   } else {
-    //     scopePollingDetectionStrategy(() => {
-    //       if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) {
-    //         this._readyState = WalletReadyState.Installed
-    //         this.emit('readyStateChange', this._readyState)
-    //         return true
-    //       }
-    //       return false
-    //     })
-    //   }
-    // }
-    // toast.success('call constructor')
-
     scopePollingDetectionStrategy(() => {
       if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) {
+        this._readyState = WalletReadyState.Installed;
+        this.emit("readyStateChange", this._readyState);
+
         if (this.isIOS()) {
-          //auto connect
-          toast.success("detected. auto connect");
-          this.connect();
+          console.log("detected. auto connect");
+          setTimeout(() => {
+            this.autoConnect();
+          }, 2000); 
         } else {
-          toast.success("detected. not iOS");
-          this._readyState = WalletReadyState.Installed;
-          this.emit("readyStateChange", this._readyState);
+          console.log("detected. not iOS");
         }
 
         return true;
       }
 
       if (this.isIOS()) {
-        toast.success("not detected. is iOS");
+        console.log("not detected. is iOS");
         // when in iOS (not webview), set Phantom as loadable instead of checking for install
         this._readyState = WalletReadyState.Loadable;
         this.emit("readyStateChange", this._readyState);

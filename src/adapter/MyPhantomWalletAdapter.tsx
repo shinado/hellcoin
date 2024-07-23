@@ -95,9 +95,13 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
     this._wallet = null;
     this._publicKey = null;
 
-    console.log('readyState=>', this._readyState)
-    const userAgent = navigator.userAgent.toLowerCase();
-    console.log('userAgent=>', userAgent)
+    console.log("readyState=>", this._readyState);
+    if (typeof window !== "undefined" && window.navigator) {
+      const userAgent = navigator.userAgent;
+      console.log("userAgent=>", userAgent);
+    } else {
+      console.log("userAgent=>NA");
+    }
 
     if (this._readyState !== WalletReadyState.Unsupported) {
       if (isIosAndRedirectable()) {

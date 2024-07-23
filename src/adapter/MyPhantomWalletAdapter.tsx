@@ -96,6 +96,9 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
     this._publicKey = null;
 
     console.log('readyState=>', this._readyState)
+    const userAgent = navigator.userAgent.toLowerCase();
+    console.log('userAgent=>', userAgent)
+
     if (this._readyState !== WalletReadyState.Unsupported) {
       if (isIosAndRedirectable()) {
         // when in iOS (not webview), set Phantom as loadable instead of checking for install

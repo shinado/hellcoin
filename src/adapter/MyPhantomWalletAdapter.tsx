@@ -30,7 +30,6 @@ import type {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
-import { Toaster, toast } from "react-hot-toast";
 
 interface PhantomWalletEvents {
   connect(...args: unknown[]): unknown;
@@ -121,9 +120,15 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
             console.log("readyState=>", this._readyState);
 
             if (isIOS()) {
-              console.log("isIOS&autoConnect=>");
-              this.autoConnect();
+              const searchString = window.location.search;
+              const searchParams = new URLSearchParams(searchString);
+              const autoConnect = searchParams.get("autoConnect");
+              if (autoConnect) {
+                console.log("isIOS&autoConnect=>");
+                this.autoConnect();
+              }
             }
+            
             return true;
           }
 
@@ -192,7 +197,7 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
         // this will open the current URL in the Phantom in-wallet browser
         const url = encodeURIComponent(window.location.href);
         const ref = encodeURIComponent(window.location.origin);
-        window.location.href = `https://phantom.app/ul/browse/${url}?ref=${ref}`;
+        window.location.href = `https://phantom.app/ul/browse/${url}?ref=${ref}&autoConnect=true`;
         return;
       }
 

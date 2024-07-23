@@ -99,10 +99,11 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
 
     const isIOS = () => {
       if (typeof window !== "undefined" && window.navigator) {
-        const userAgent = navigator.userAgent;
-        return userAgent.includes('iphone') || userAgent.includes('ipad');
+        const userAgent = navigator.userAgent.toLowerCase();
+        console.log("userAgent=>", userAgent);
+        return userAgent.includes("iphone") || userAgent.includes("ipad");
       } else {
-        return false
+        return false;
       }
     };
 
@@ -119,7 +120,8 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
             this.emit("readyStateChange", this._readyState);
             console.log("readyState=>", this._readyState);
 
-            if(isIOS()){
+            if (isIOS()) {
+              console.log("isIOS&autoConnect=>");
               this.autoConnect();
             }
             return true;
@@ -174,6 +176,7 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
   async autoConnect(): Promise<void> {
     // Skip autoconnect in the Loadable state
     // We can't redirect to a universal link without user input
+    console.log("autoConnect()=>", this._readyState);
     if (this.readyState === WalletReadyState.Installed) {
       await this.connect();
     }
@@ -181,6 +184,7 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
 
   async connect(): Promise<void> {
     try {
+      console.log("connect()=>", this.connected, this.connecting);
       if (this.connected || this.connecting) return;
 
       if (this.readyState === WalletReadyState.Loadable) {
@@ -205,9 +209,12 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
         } catch (error: any) {
           throw new WalletConnectionError(error?.message, error);
         }
+      } else {
+        console.log("wallet.isConnected=>", wallet.isConnected);
       }
 
       if (!wallet.publicKey) throw new WalletAccountError();
+      console.log("publicKey=>", wallet.publicKey);
 
       let publicKey: PublicKey;
       try {

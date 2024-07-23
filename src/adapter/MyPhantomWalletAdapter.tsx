@@ -95,18 +95,22 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
     this._wallet = null;
     this._publicKey = null;
 
+    console.log('readyState=>', this._readyState)
     if (this._readyState !== WalletReadyState.Unsupported) {
       if (isIosAndRedirectable()) {
         // when in iOS (not webview), set Phantom as loadable instead of checking for install
         this._readyState = WalletReadyState.Loadable;
         this.emit("readyStateChange", this._readyState);
+        console.log("readyState=>", this._readyState);
       } else {
         scopePollingDetectionStrategy(() => {
           if (window.phantom?.solana?.isPhantom || window.solana?.isPhantom) {
             this._readyState = WalletReadyState.Installed;
             this.emit("readyStateChange", this._readyState);
+            console.log("readyState=>", this._readyState);
             return true;
           }
+
           return false;
         });
       }

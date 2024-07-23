@@ -96,12 +96,15 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
     this._publicKey = null;
 
     console.log("readyState=>", this._readyState);
-    if (typeof window !== "undefined" && window.navigator) {
-      const userAgent = navigator.userAgent;
-      console.log("userAgent=>", userAgent);
-    } else {
-      console.log("userAgent=>NA");
-    }
+
+    const isIOS = () => {
+      if (typeof window !== "undefined" && window.navigator) {
+        const userAgent = navigator.userAgent;
+        return userAgent.includes('iphone') || userAgent.includes('ipad');
+      } else {
+        return false
+      }
+    };
 
     if (this._readyState !== WalletReadyState.Unsupported) {
       if (isIosAndRedirectable()) {
@@ -115,6 +118,10 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
             this._readyState = WalletReadyState.Installed;
             this.emit("readyStateChange", this._readyState);
             console.log("readyState=>", this._readyState);
+
+            if(isIOS()){
+              this.autoConnect();
+            }
             return true;
           }
 
@@ -174,9 +181,6 @@ export class MyPhantomWalletAdapter extends BaseMessageSignerWalletAdapter {
 
   async connect(): Promise<void> {
     try {
-      window.location.href = `https://google.com/search?q=${this.readyState}`;
-      return;
-
       if (this.connected || this.connecting) return;
 
       if (this.readyState === WalletReadyState.Loadable) {

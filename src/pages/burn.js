@@ -502,7 +502,8 @@ const Burn = forwardRef((props, ref) => {
               <div className="w-full max-w-xl text-center">
                 <h1 className="mt-10 text-8xl font-extrabold text-white">Hellcoin</h1>
                 <p className="mt-4 text-lg text-white mt-[-10px]">
-                  To the dead. Solve hyperinflation in hell once and for all.
+                  The meme coin burning hyperinflation in hell 🔥
+                  {/* To the dead. Solve hyperinflation in hell once and for all. */}
                 </p>
 
                 <p className="mt-0 text-md text-gray-400 text-[14px]">
@@ -518,7 +519,7 @@ const Burn = forwardRef((props, ref) => {
 
                 <div className="mt-8">
                   <p className="mt-1 text-md font-bold text-white text-left">
-                    Offer to
+                    Transfer to
                   </p>
                   <input
                     type="text"
@@ -546,7 +547,7 @@ const Burn = forwardRef((props, ref) => {
                   </p>
                   <input
                     type="number"
-                    placeholder="444444"
+                    placeholder="100,000"
                     className="mb-6 mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
                     // className="mt-2 p-3 block w-full border border-gray-300 rounded-md shadow-sm text-white"
                     value={mingAmount}

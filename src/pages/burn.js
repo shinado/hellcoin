@@ -499,7 +499,7 @@ const Burn = forwardRef((props, ref) => {
 
             {/* Content */}
             <div className="relative w-screen flex h-[90vh] justify-center items-center text-center">
-              <div className="w-full max-w-xl text-center">
+              <div className="w-full max-w-xl text-center px-4 sm:px-6 lg:px-8">
                 <h1 className="mt-10 text-8xl font-extrabold text-white">Hellcoin</h1>
                 <p className="mt-4 text-lg text-white mt-[-10px]">
                   The meme coin burning hyperinflation in hell 🔥
@@ -517,7 +517,7 @@ const Burn = forwardRef((props, ref) => {
                   </a>
                 </p>
 
-                <div className="mt-8">
+                <div className="mt-8 px-4 sm:px-6 lg:px-8">
                   <p className="mt-1 text-md font-bold text-white text-left">
                     Transfer to
                   </p>
@@ -604,8 +604,57 @@ const Burn = forwardRef((props, ref) => {
           {/* Add Top Holders Section */}
           <div className="max-w-4xl mx-auto">
             <h3 className="text-2xl font-bold text-white text-center mb-6">Top 10 Holders</h3>
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-700">
+            <div className="bg-gray-800 rounded-lg overflow-hidden overflow-x-auto">
+              {/* Mobile view */}
+              <div className="md:hidden">
+                {topHolders.map((holder, index) => {
+                  const mappingResult = nameMappings[holder.owner];
+                  let category, categoryColor;
+
+                  if (mappingResult) {
+                    category = mappingResult.name;
+                    categoryColor = mappingResult.color;
+                  } else {
+                    if (holder.owner.startsWith('DEAD') && (holder.owner.endsWith('DEADRiP') || holder.owner.endsWith('DEADDEAD'))) {
+                      category = "Underworld Holdings";
+                      categoryColor = "#36A2EB";
+                    } else {
+                      category = "Real World Holdings";
+                      categoryColor = "#FFCE56";
+                    }
+                  }
+
+                  return (
+                    <div key={holder.address} className="p-4 border-b border-gray-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-300 font-medium">#{index + 1}</span>
+                        <span 
+                          className="px-2 py-1 text-xs rounded-full" 
+                          style={{ 
+                            backgroundColor: `${categoryColor}20`,
+                            color: categoryColor,
+                            border: `1px solid ${categoryColor}`
+                          }}
+                        >
+                          {category}
+                        </span>
+                      </div>
+                      <div className="text-gray-300 text-sm break-all mb-2">
+                        {holder.owner}
+                      </div>
+                      <div className="text-gray-300 text-right font-medium">
+                        {holder.amount.toLocaleString(undefined, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 2
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop view */}
+              <table className="min-w-full divide-y divide-gray-700 hidden md:table">
                 <thead className="bg-gray-700">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-20">
@@ -621,10 +670,7 @@ const Burn = forwardRef((props, ref) => {
                 </thead>
                 <tbody className="bg-gray-800 divide-y divide-gray-700">
                   {topHolders.map((holder, index) => {
-                    // Determine category
-                    let category;
-                    let categoryColor;
-
+                    let category, categoryColor;
                     const mappingResult = nameMappings[holder.owner];
 
                     if (mappingResult) {

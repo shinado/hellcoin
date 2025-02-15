@@ -506,7 +506,7 @@ const Burn = forwardRef((props, ref) => {
                 </p>
 
                 <p className="mt-0 text-md text-gray-400 text-[14px]">
-                  Don't have Hellcoin Yet? Get $HELL from {" "}
+                  Don&apos;t have Hellcoin Yet? Get $HELL from {" "}
                   <a
                     className="text-blue-500"
                     href=""
@@ -679,7 +679,7 @@ const Burn = forwardRef((props, ref) => {
       <div className="bg-[#002800] py-12 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-white text-center">What does Hellcoin do?</h2>
-          <div className="text-center text-l">BUNR. DONNOT HODL. Every $HELL you offered to the underworld causes $HELL deflation, resulting in a higher price. </div>
+          <div className="text-center text-l">BUNR. DONNOT HODL. Every &#36;HELL you offered to the underworld causes &#36;HELL deflation, resulting in a higher price. </div>
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="aspect-w-16 aspect-h-9">
               <ReactPlayer

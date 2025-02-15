@@ -601,7 +601,7 @@ const Burn = forwardRef((props, ref) => {
           </div>
 
           {/* Add Top Holders Section */}
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <h3 className="text-2xl font-bold text-white text-center mb-6">Top 10 Holders</h3>
             <div className="bg-gray-800 rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-700">
@@ -610,13 +610,10 @@ const Burn = forwardRef((props, ref) => {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-20">
                       Rank
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/2">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Address
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/4">
-                      Mark
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-1/4">
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Amount
                     </th>
                   </tr>
@@ -631,14 +628,14 @@ const Burn = forwardRef((props, ref) => {
 
                     if (mappingResult) {
                       category = mappingResult.name;
-                      categoryColor = `text-[${mappingResult.color}]`;
+                      categoryColor = mappingResult.color;
                     } else {
                       if (holder.owner.startsWith('DEAD') && (holder.owner.endsWith('DEADRiP') || holder.owner.endsWith('DEADDEAD'))) {
                         category = "Underworld Holdings";
-                        categoryColor = "text-[#36A2EB]";
+                        categoryColor = "#36A2EB";
                       } else {
                         category = "Real World Holdings";
-                        categoryColor = "text-[#FFCE56]";
+                        categoryColor = "#FFCE56";
                       }
                     }
 
@@ -648,13 +645,18 @@ const Burn = forwardRef((props, ref) => {
                           {index + 1}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-300">
-                          <div className="break-all">
-                            {holder.owner}
-                          </div>
-                        </td>
-                        <td className={`px-6 py-4 text-sm font-medium ${categoryColor}`}>
-                          <div className="break-words">
-                            {category}
+                          <div className="flex items-center gap-2">
+                            <span className="break-all">{holder.owner}</span>
+                            <span 
+                              className="px-2 py-1 text-xs rounded-full" 
+                              style={{ 
+                                backgroundColor: `${categoryColor}20`,
+                                color: categoryColor,
+                                border: `1px solid ${categoryColor}`
+                              }}
+                            >
+                              {category}
+                            </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-300 text-right">

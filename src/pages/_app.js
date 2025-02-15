@@ -46,10 +46,10 @@ function App({ Component, pageProps }) {
 
         {/* Open Graph / Social Media Meta Tags */}
         <meta property="og:title" content="$HELL Token - Burn to Earn" />
-        <meta property="og:description" content="Burn $HELL to the underworld. " />
+        <meta property="og:description" content="Solve hyperinflation in hell once and for all." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://hellcoin.money" />
-        <meta property="og:image" content="https://hellcoin.money/og-image.jpg" />
+        <meta property="og:image" content="https://hellcoin.money/hellcoin_bg.jpg" />
       </Head>
       <ConnectionProvider endpoint={endpoint}>
         <WalletProvider wallets={wallets} autoConnect>

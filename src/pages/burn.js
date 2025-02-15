@@ -633,7 +633,7 @@ const Burn = forwardRef((props, ref) => {
                       category = mappingResult.name;
                       categoryColor = `text-[${mappingResult.color}]`;
                     } else {
-                      if (holder.owner.startsWith('DEAD') && holder.owner.endsWith('DEADRiP')) {
+                      if (holder.owner.startsWith('DEAD') && (holder.owner.endsWith('DEADRiP') || holder.owner.endsWith('DEADDEAD'))) {
                         category = "Underworld Holdings";
                         categoryColor = "text-[#36A2EB]";
                       } else {

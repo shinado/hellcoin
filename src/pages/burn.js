@@ -2,7 +2,7 @@ import React, { useState, useEffect, forwardRef } from "react";
 import ReactPlayer from "react-player";
 import LoadingText from "./LoadingText";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { HiCheck, HiExclamation, HiX } from "react-icons/hi";
+import { HiCheck, HiExclamation, HiExclamationCircle, HiX } from "react-icons/hi";
 
 import { Toast } from "flowbite-react";
 
@@ -518,41 +518,55 @@ const Burn = forwardRef((props, ref) => {
                 </p>
 
                 <div className="mt-8 px-4 sm:px-6 lg:px-8">
-                  <p className="mt-1 text-md font-bold text-white text-left">
-                    Transfer to
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="mt-1 text-md font-bold text-white text-left">
+                      Transfer to
+                    </p>
+                    <div className="relative group">
+                      <HiExclamationCircle
+                        className="w-5 h-5 text-gray-400 hover:text-white cursor-help"
+                      />
+                      <div className="absolute text-left left-0 w-72 p-4 bg-gray-800 text-sm text-gray-300 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-10 mt-1 shadow-lg border border-gray-700">
+                        <p>
+                          The name will be transformed into a Solana address, 
+                        starting with &quot;DEAD&quot; and ending with &quot;DEADRiP&quot;, owned by NO ONE ALIVE.
+                        </p>
+                        <p className="mt-2">
+                        The $HELL you send will be no longer in circulation which causes deflation, resulting in a higher price.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                   <input
                     type="text"
                     placeholder="Kobe Bryant"
-                    // className="border border-gray-300 rounded-md shadow-sm text-white"
                     className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
                     value={personName}
                     onChange={(e) => setPersonName(e.target.value)}
                   />
                   {personName && (
-                    <p className="text-left text-sm">
+                    <p className="text-left text-sm mt-2">
                       Address: {transformedAddress}
                     </p>
                   )}
 
-                  {/* Add balance display */}
-                  {isWalletConnected && (
-                    <p className="text-left text-sm mt-2 text-white">
-                      Your Balance: {tokenBalance !== null ? `${tokenBalance} $HELL` : 'Loading...'}
-                    </p>
-                  )}
-
-                  <p className="mt-4 text-md font-bold text-white text-left">
+                  <p className="mt-6 text-md font-bold text-white text-left">
                     Amount
                   </p>
+
                   <input
                     type="number"
                     placeholder="100,000"
-                    className="mb-6 mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
+                    className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
                     // className="mt-2 p-3 block w-full border border-gray-300 rounded-md shadow-sm text-white"
                     value={mingAmount}
                     onChange={(e) => setMingAmount(e.target.value)}
                   />
+                  {isWalletConnected && (
+                    <p className="mt-2 text-left text-sm text-white">
+                      Your Balance: {tokenBalance !== null ? `${tokenBalance} $HELL` : 'Loading...'}
+                    </p>
+                  )}
 
                   {!isWalletConnected && <WalletMultiButtonDynamic className="mt-8" />}
                   <p>
@@ -560,7 +574,7 @@ const Burn = forwardRef((props, ref) => {
                       <div>
                         <button
                           disabled={loading || !personName || !mingAmount}
-                          className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
+                          className="mt-6 bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
                           onClick={() => handleBurnClick()}
                         >
                           Transfer

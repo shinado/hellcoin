@@ -40,7 +40,7 @@ function App({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <title>Hellcoin</title>
+        <title>Hellcoin, Digial Hell money used in underworld</title>
         <meta name="description" content="To the dead. Solve hyperinflation in hell once and for all." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 

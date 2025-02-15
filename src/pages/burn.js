@@ -493,9 +493,9 @@ const Burn = forwardRef((props, ref) => {
         <div className={(playVideo ? "fadeOut" : "fadeIn") + className}>
           <div
             className="relative w-screen h-screen bg-cover bg-center"
-            style={{ backgroundImage: `url('/ming_bg.jpg')` }}
+            style={{ backgroundImage: `url('/hellcoin_bg.jpg')` }}
           >
-            <div className="absolute inset-0 bg-[#330000] opacity-80"></div>
+            <div className="absolute inset-0 bg-[#000800] opacity-80"></div>
 
             {/* Content */}
             <div className="relative w-screen flex h-[90vh] justify-center items-center text-center">
@@ -589,7 +589,7 @@ const Burn = forwardRef((props, ref) => {
       </div>
 
       {/* Add this before the YouTube section */}
-      <div className="bg-[#330000] py-12 relative">
+      <div className="bg-[#002200] py-12 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-white text-center mb-8">Token Distribution</h2>
           <div className="w-full max-w-md mx-auto mb-12">
@@ -676,10 +676,11 @@ const Burn = forwardRef((props, ref) => {
       </div>
 
       {/* Add YouTube Videos Section */}
-      <div className="bg-[#330000] py-12 relative">
+      <div className="bg-[#002800] py-12 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white text-center mb-8">What does Hellcoin do?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <h2 className="text-3xl font-bold text-white text-center">What does Hellcoin do?</h2>
+          <div className="text-center text-l">BUNR. DONNOT HODL. Every $HELL you offered to the underworld causes $HELL deflation, resulting in a higher price. </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="aspect-w-16 aspect-h-9">
               <ReactPlayer
                 url="https://www.youtube.com/watch?v=URYG34BYWUw"

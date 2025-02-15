@@ -509,7 +509,7 @@ const Burn = forwardRef((props, ref) => {
                   Don&apos;t have Hellcoin Yet? Get $HELL from {" "}
                   <a
                     className="text-blue-500"
-                    href=""
+                    href="https://pump.fun/coin/oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump"
                     target="_blank"
                   >
                     pump.fun

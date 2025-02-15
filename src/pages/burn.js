@@ -2,7 +2,6 @@ import React, { useState, useEffect, forwardRef } from "react";
 import ReactPlayer from "react-player";
 import LoadingText from "./LoadingText";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { HiCheck, HiExclamation, HiX } from "react-icons/hi";
 
 import { Toast } from "flowbite-react";
@@ -26,31 +25,217 @@ import {
   getAssociatedTokenAddress,
   createTransferInstruction,
   createAssociatedTokenAccountInstruction,
+  AccountLayout
 } from "@solana/spl-token";
 import BurnSucceedDialog from "./BurnSucceedDialog";
 import pinyinUtil from "../pinyin/pinyinUtil";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 import { Toaster, toast } from "react-hot-toast";
+import dynamic from 'next/dynamic';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
+
+// Create a dynamic import for WalletMultiButton with ssr disabled
+const WalletMultiButtonDynamic = dynamic(
+  () => import('@solana/wallet-adapter-react-ui').then(mod => mod.WalletMultiButton),
+  { ssr: false }
+);
+
+// Register ChartJS components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Burn = forwardRef((props, ref) => {
+  const nameMappings = {
+    "7GqFL3YoxcbAsxPYAJW9qfMjbB16E2uV2R2DS4FYus6U": {
+      name: "pump.fun Pool",
+      color: "#FF6384"
+    },
+    "DEADCentra1BankofUnderwor1dooooooopoDEADRiP": {
+      name: "Central Bank of Underworld",
+      color: "#36A2EB"
+    }
+  }
+
+  const getTokenHolders = async () => {
+    try {
+      const netWork = "https://wiser-evocative-season.solana-mainnet.quiknode.pro/c703e8fe265b859cdde46e6b89f792b5573a3b98/";
+      const connection = new Connection(netWork, "confirmed");
+      const mintPubKey = new PublicKey(mintAddress);
+
+      // Get all token accounts for this mint
+      const tokenAccounts = await connection.getProgramAccounts(
+        TOKEN_PROGRAM_ID,
+        {
+          filters: [
+            {
+              dataSize: 165, // Size of token account data
+            },
+            {
+              memcmp: {
+                offset: 0, // Offset of mint address in token account data
+                bytes: mintPubKey.toBase58(), // Mint address to filter by
+              },
+            },
+          ],
+        }
+      );
+
+      // Process the accounts to get holder information
+      const holders = tokenAccounts.map(account => {
+        const accountData = AccountLayout.decode(account.account.data);
+        const amount = Number(accountData.amount) / (10 ** 6); // Adjust decimals as needed
+        const owner = new PublicKey(accountData.owner).toString();
+
+        return {
+          owner,
+          amount,
+          address: account.pubkey.toString()
+        };
+      });
+
+      // Filter out zero balance accounts
+      const activeHolders = holders.filter(holder => holder.amount > 0);
+
+      // Sort by amount (descending)
+      activeHolders.sort((a, b) => b.amount - a.amount);
+      return activeHolders;
+    } catch (error) {
+      console.error('Error fetching token holders:', error);
+      return [];
+    }
+  };
+
+
+  const mintAddress = "oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump";
   const wallet = useWallet();
   const [playVideo, setPlayVideo] = useState(false);
   const [signature, setSignature] = useState("");
 
   const [personName, setPersonName] = useState("");
-  const [recipientAddress, setRecipientAddress] = useState("");
+  // const [recipientAddress, setRecipientAddress] = useState("");
   const [mingAmount, setMingAmount] = useState("");
   const [showBurnSucceedDialog, setShowBurnSucceedDialog] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
-  const [showCopiedToast, setShowCopiedToast] = useState(false);
+
+  // Add new state for transformed address
+  const [transformedAddress, setTransformedAddress] = useState("");
+
+  // Add new state for token balance
+  const [tokenBalance, setTokenBalance] = useState(null);
+
+  // Add state for distribution data
+  const [distributionData, setDistributionData] = useState(null);
+
+  // Add new state for top holders
+  const [topHolders, setTopHolders] = useState([]);
 
   useEffect(() => {
     setIsWalletConnected(wallet.connected);
   }, [wallet.connected]);
 
   const bs58 = require("bs58");
+
+  // Move transformation logic into useEffect
+  useEffect(() => {
+    if (personName) {
+      const address = transformToFixedBase58(personName);
+      setTransformedAddress(address);
+    }
+  }, [personName]); // Only run when personName changes
+
+  // Add function to process holder distribution
+  const processHolderDistribution = (holders) => {
+    const pumpFunAddress = "7GqFL3YoxcbAsxPYAJW9qfMjbB16E2uV2R2DS4FYus6U";
+
+    let pumpFunAmount = 0;
+    let underworldAmount = 0;
+    let realWorldAmount = 0;
+
+    holders.forEach(holder => {
+      if (holder.owner === pumpFunAddress) {
+        pumpFunAmount += holder.amount;
+      } else if (holder.owner.startsWith('DEAD') && holder.owner.endsWith('DEADRiP')) {
+        underworldAmount += holder.amount;
+      } else {
+        realWorldAmount += holder.amount;
+      }
+    });
+
+    console.log("pumpFunAmount: ", pumpFunAmount);
+    console.log("underworldAmount: ", underworldAmount);
+    console.log("realWorldAmount: ", realWorldAmount);
+
+    const total = pumpFunAmount + underworldAmount + realWorldAmount;
+
+    return {
+      labels: ['pump.fun Pool', 'Underworld Holdings', 'Real World Holdings'],
+      datasets: [{
+        data: [
+          (pumpFunAmount / total) * 100,
+          (underworldAmount / total) * 100,
+          (realWorldAmount / total) * 100
+        ],
+        backgroundColor: [
+          '#FF6384',
+          '#36A2EB',
+          '#FFCE56'
+        ],
+        borderColor: [
+          '#FF6384',
+          '#36A2EB',
+          '#FFCE56'
+        ],
+        borderWidth: 1,
+      }]
+    };
+  };
+
+  // Modify your existing useEffect to include distribution calculation and top holders
+  useEffect(() => {
+    const getHolders = async () => {
+      const holders = await getTokenHolders();
+      console.log("holders: ", holders);
+
+      // Set top 10 holders
+      setTopHolders(holders.slice(0, 10));
+
+      const distribution = processHolderDistribution(holders);
+      setDistributionData(distribution);
+    }
+    getHolders();
+  }, []);
+
+  // Add function to fetch token balance
+  const fetchTokenBalance = async () => {
+    if (!wallet.publicKey) return;
+
+    try {
+      const netWork = "https://wiser-evocative-season.solana-mainnet.quiknode.pro/c703e8fe265b859cdde46e6b89f792b5573a3b98/";
+      const connection = new Connection(netWork, "confirmed");
+      const mintPubKey = new PublicKey(mintAddress);
+      const tokenAccount = await getAssociatedTokenAddress(
+        mintPubKey,
+        wallet.publicKey
+      );
+
+      const balance = await connection.getTokenAccountBalance(tokenAccount);
+      setTokenBalance(balance.value.uiAmount);
+    } catch (error) {
+      console.error("Error fetching token balance:", error);
+      setTokenBalance(null);
+    }
+  };
+
+  // Add useEffect to fetch balance when wallet connects
+  useEffect(() => {
+    if (wallet.connected) {
+      fetchTokenBalance();
+    } else {
+      setTokenBalance(null);
+    }
+  }, [wallet.connected]);
 
   const transformToFixedBase58 = (original) => {
     const pinyin = pinyinUtil.getPinyin(original).replaceAll(" ", "");
@@ -68,34 +253,31 @@ const Burn = forwardRef((props, ref) => {
       .split("")
       .every((char) => base58Chars.includes(char));
 
-    let output = "DEAD";
+    let output = "DEAD"; // Start with DEAD
 
     if (isBase58Only) {
-      // If the input contains only Base58 characters
       output += text;
     } else {
-      // If the input contains non-Base58 characters, encode it to Base58
       const bytesText = Buffer.from(text, "utf8");
       const encodedText = bs58.encode(bytesText);
       output += encodedText;
     }
 
-    // Add "DEAD" repeatedly until the output is 44 characters long
-    while (output.length < 44) {
-      output += "4";
+    // Fill with zeros and end with DEAD to make it 44 characters
+    while (output.length < 36) { // 40 = 44 - len("DEAD")
+      output += "o";
     }
+    output += "DEADRiP";
 
     const address = output.slice(0, 44);
     const publicKey = findValidAddress(address);
-
-    setRecipientAddress(publicKey);
 
     return publicKey;
   };
 
   const findValidAddress = (address) => {
     let hexChars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-    let currentIndex = address.length - 1;
+    let currentIndex = address.length - 9;
 
     function tryNextChar(index) {
       if (index < 0) return false; // Exhausted all characters, no solution found.
@@ -124,30 +306,13 @@ const Burn = forwardRef((props, ref) => {
     return tryNextChar(currentIndex);
   };
 
-  const copyAddress = () => {
-    navigator.clipboard
-      .writeText(recipientAddress)
-      .then(() => {
-        setShowCopiedToast(true);
-        console.log("address copied");
-      })
-      .catch((err) => {
-        console.log("copy address error", err);
-      });
-  };
-
   const handleBurnClick = async () => {
     setLoading(true);
 
     try {
-      // test address
-      // const mintAddress = "BjNni3M1rsKD9Q36RhARJJfqvSNmxvS69p4LjdYLmNuz";
-      // MING address
-      const mintAddress = "57n1Z8g7XHKAj7eeHeZ3SaYYbeDEmTGUjYsv9Hk7TxMx";
-
       await sendSPLToken(
         wallet.publicKey,
-        recipientAddress,
+        transformedAddress,
         mintAddress,
         mingAmount
       );
@@ -169,20 +334,18 @@ const Burn = forwardRef((props, ref) => {
     try {
       const netWork =
         "https://wiser-evocative-season.solana-mainnet.quiknode.pro/c703e8fe265b859cdde46e6b89f792b5573a3b98/"; //主网
-      const connection = new Connection(netWork, "recent");
+      const connection = new Connection(netWork, "confirmed");
 
-      const decimals = 8;
+      const decimals = 6;
       const mintPubKey = new PublicKey(mintAddress);
       const fromPubkey = new PublicKey(senderAddress);
       const toPubkey = new PublicKey(recipientAddress);
 
-      //获得发送者的associated token address
       const fromAssociatedTokenAddress = await getAssociatedTokenAddress(
         mintPubKey,
         fromPubkey
       );
 
-      //获得接收者的associated token address
       const destinationAssociatedTokenAddress = await getAssociatedTokenAddress(
         mintPubKey,
         toPubkey
@@ -192,11 +355,10 @@ const Burn = forwardRef((props, ref) => {
         destinationAssociatedTokenAddress
       );
 
-      const tx = new Transaction(); // 建一个交易单
+      const tx = new Transaction();
 
       if (!destination) {
         /**
-         * 如果接收者没有associated token address，也就是他不持有这个代币，则要在transaction里面帮他创建这个地址，创建费用由发送者承担
          * @param payer                    Payer of the initialization fees
          * @param associatedToken          New associated token account
          * @param owner                    Owner of the new account
@@ -204,10 +366,10 @@ const Burn = forwardRef((props, ref) => {
          */
         tx.add(
           createAssociatedTokenAccountInstruction(
-            fromPubkey, //发送者承担创建费用
-            destinationAssociatedTokenAddress, //接收者的associated token address
-            toPubkey, //这里才是接收者的地址
-            mintPubKey //代币地址
+            fromPubkey, //fee payer
+            destinationAssociatedTokenAddress,
+            toPubkey,
+            mintPubKey
           )
         );
         console.log("create associated token account: ", tx);
@@ -224,18 +386,17 @@ const Burn = forwardRef((props, ref) => {
        * @param amount       Number of tokens to transfer
        */
       const splTransferIx = createTransferInstruction(
-        fromAssociatedTokenAddress, //发送者的associated token address
-        destinationAssociatedTokenAddress, //接收者的associated token address
-        fromPubkey, //发送者的地址
+        fromAssociatedTokenAddress,
+        destinationAssociatedTokenAddress,
+        fromPubkey,
         amountBigInt
       );
 
-      //加入到transation
       tx.add(splTransferIx);
       tx.recentBlockhash = (
         await connection.getLatestBlockhash("max")
       ).blockhash;
-      tx.feePayer = fromPubkey; // 付款人
+      tx.feePayer = fromPubkey;
 
       const signedTransaction = await wallet.signTransaction(tx);
 
@@ -260,170 +421,295 @@ const Burn = forwardRef((props, ref) => {
     }
   }
 
+  // Add chart options
+  const chartOptions = {
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color: 'white'
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${context.raw.toFixed(2)}%`;
+          }
+        }
+      }
+    }
+  };
+
   const baseClassName = " relative flex justify-center items-center h-full";
   const className = " bg-slate-900 px-4 sm:px-6 lg:px-8 py-10" + baseClassName;
   return (
-    <div ref={ref} className="relative h-full md:h-screen">
-      <div
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          overflow: "hidden",
-        }}
-        className={playVideo ? "fadeIn" : "fadeOut"}
-      >
+    <div>
+      <div ref={ref} className="relative h-[85vh]">
+        <div
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            overflow: "hidden",
+          }}
+          className={playVideo ? "fadeIn" : "fadeOut"}
+        >
+          {playVideo && (
+            <div className="video-container">
+              <ReactPlayer
+                url="/burning-fire.mp4"
+                playing={playVideo}
+                loop
+                className="react-player"
+              />
+            </div>
+          )}
+        </div>
+
         {playVideo && (
-          <div className="video-container">
-            <ReactPlayer
-              url="/burning-fire.mp4"
-              playing={playVideo}
-              loop
-              className="react-player"
+          <div
+            className={baseClassName}
+            style={{
+              position: "relative",
+              width: "100%",
+              height: "100%",
+              overflow: "hidden", // Prevent content from spilling out when height is 0
+            }}
+          >
+            <LoadingText
+              textArray={[
+                "Transfering to the dead...",
+                "Waiting for Bank of Hell to confirm the transaction...",
+                "Bank of Hell confirmed the transaction...",
+                "Waiting for transaction confirmation...",
+              ]}
+              style={{
+                position: "relative",
+              }}
             />
           </div>
         )}
+
+        <div className={(playVideo ? "fadeOut" : "fadeIn") + className}>
+          <div
+            className="relative w-screen h-screen bg-cover bg-center"
+            style={{ backgroundImage: `url('/ming_bg.jpg')` }}
+          >
+            <div className="absolute inset-0 bg-[#330000] opacity-80"></div>
+
+            {/* Content */}
+            <div className="relative w-screen flex h-[90vh] justify-center items-center text-center">
+              <div className="w-full max-w-xl text-center">
+                <h1 className="mt-10 text-8xl font-extrabold text-white">Hellcoin</h1>
+                <p className="mt-4 text-lg text-white mt-[-10px]">
+                  To the dead. Solve hyperinflation in hell once and for all.
+                </p>
+
+                <p className="mt-0 text-md text-gray-400 text-[14px]">
+                  Don't have Hellcoin Yet? Get $HELL from {" "}
+                  <a
+                    className="text-blue-500"
+                    href=""
+                    target="_blank"
+                  >
+                    pump.fun
+                  </a>
+                </p>
+
+                <div className="mt-8">
+                  <p className="mt-1 text-md font-bold text-white text-left">
+                    Offer to
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="Kobe Bryant"
+                    // className="border border-gray-300 rounded-md shadow-sm text-white"
+                    className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
+                    value={personName}
+                    onChange={(e) => setPersonName(e.target.value)}
+                  />
+                  {personName && (
+                    <p className="text-left text-sm">
+                      Address: {transformedAddress}
+                    </p>
+                  )}
+
+                  {/* Add balance display */}
+                  {isWalletConnected && (
+                    <p className="text-left text-sm mt-2 text-white">
+                      Your Balance: {tokenBalance !== null ? `${tokenBalance} $HELL` : 'Loading...'}
+                    </p>
+                  )}
+
+                  <p className="mt-4 text-md font-bold text-white text-left">
+                    Amount
+                  </p>
+                  <input
+                    type="number"
+                    placeholder="444444"
+                    className="mb-6 mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
+                    // className="mt-2 p-3 block w-full border border-gray-300 rounded-md shadow-sm text-white"
+                    value={mingAmount}
+                    onChange={(e) => setMingAmount(e.target.value)}
+                  />
+
+                  {!isWalletConnected && <WalletMultiButtonDynamic className="mt-8" />}
+                  <p>
+                    {isWalletConnected && (
+                      <div>
+                        <button
+                          disabled={loading || !personName || !mingAmount}
+                          className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
+                          onClick={() => handleBurnClick()}
+                        >
+                          Transfer
+                        </button>
+                      </div>
+                    )}
+                  </p>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <BurnSucceedDialog
+          open={showBurnSucceedDialog}
+          name={personName}
+          addr={transformedAddress}
+          amount={mingAmount}
+          tx={signature}
+          handleClose={() => {
+            setShowBurnSucceedDialog(false);
+          }}
+        />
+
       </div>
 
-      {playVideo && (
-        <div
-          className={baseClassName}
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
-            overflow: "hidden", // Prevent content from spilling out when height is 0
-          }}
-        >
-          <LoadingText
-            textArray={[
-              "正在烧给鬼魂地址...",
-              "等待地府银行确认交易...",
-              "地府银行确认交易...",
-              "等待交易确认...",
-            ]}
-            style={{
-              position: "relative",
-            }}
-          />
-        </div>
-      )}
+      {/* Add this before the YouTube section */}
+      <div className="bg-[#330000] py-12 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-white text-center mb-8">Token Distribution</h2>
+          <div className="w-full max-w-md mx-auto mb-12">
+            {distributionData ? (
+              <Pie data={distributionData} options={chartOptions} />
+            ) : (
+              <p className="text-white text-center">Loading distribution data...</p>
+            )}
+          </div>
 
-      <div className={(playVideo ? "fadeOut" : "fadeIn") + className}>
-        <div
-          className="relative w-screen h-screen bg-cover bg-center"
-          style={{ backgroundImage: `url('/ming_bg.jpg')` }}
-        >
-          <div className="absolute inset-0 bg-[#330000] opacity-80"></div>
+          {/* Add Top Holders Section */}
+          <div className="max-w-7xl mx-auto">
+            <h3 className="text-2xl font-bold text-white text-center mb-6">Top 10 Holders</h3>
+            <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-700">
+                <thead className="bg-gray-700">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-20">
+                      Rank
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/2">
+                      Address
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/4">
+                      Mark
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-1/4">
+                      Amount
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-gray-800 divide-y divide-gray-700">
+                  {topHolders.map((holder, index) => {
+                    // Determine category
+                    let category;
+                    let categoryColor;
 
-          {/* Content */}
-          <div className="relative w-screen flex h-screen justify-center items-center text-center">
-            <div className="w-full max-w-xl text-center">
-              <h2 className="text-5xl font-extrabold text-white">赛博祭祖</h2>
-              <p className="mt-4 text-lg text-white">
-                烧给祖先、神明、已故的公众人物。🈲请勿烧给还在世的人🈲
-              </p>
-              {/* <p className="mt-4 text-md text-white">
-                还没有冥币？从
-                <a
-                  className="text-blue-500"
-                  href="https://v1.orca.so/"
-                  target="_blank"
-                >
-                  池子里购买
-                </a>
-                。地址：57n1Z8g7XHKAj7eeHeZ3SaYYbeDEmTGUjYsv9Hk7TxMx
-              </p> */}
-              {/* <p className="text-base text-white-500">
-            {i18next.t("home.burn.content.dk")}
-            <Link href="/deaderboard">
-              {i18next.t("home.burn.content.deaderboard")}
-            </Link>
-          </p> */}
+                    const mappingResult = nameMappings[holder.owner];
 
-              <div className="mt-8">
-                <p className="mt-1 text-md font-bold text-white text-left">
-                  烧给
-                </p>
-                <input
-                  type="text"
-                  placeholder="秦始皇"
-                  // className="border border-gray-300 rounded-md shadow-sm text-white"
-                  className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
-                  value={personName}
-                  onChange={(e) => setPersonName(e.target.value)}
-                />
-                {personName && (
-                  <p className="text-left text-sm">
-                    转入地址: {transformToFixedBase58(personName)}
-                  </p>
-                )}
+                    if (mappingResult) {
+                      category = mappingResult.name;
+                      categoryColor = `text-[${mappingResult.color}]`;
+                    } else {
+                      if (holder.owner.startsWith('DEAD') && holder.owner.endsWith('DEADRiP')) {
+                        category = "Underworld Holdings";
+                        categoryColor = "text-[#36A2EB]";
+                      } else {
+                        category = "Real World Holdings";
+                        categoryColor = "text-[#FFCE56]";
+                      }
+                    }
 
-                <p className="mt-4 text-md font-bold text-white text-left">
-                  数量
-                </p>
-                <input
-                  type="number"
-                  placeholder="444444"
-                  className="mb-6 mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
-                  // className="mt-2 p-3 block w-full border border-gray-300 rounded-md shadow-sm text-white"
-                  value={mingAmount}
-                  onChange={(e) => setMingAmount(e.target.value)}
-                />
-
-                {!isWalletConnected && <WalletMultiButton className="mt-8" />}
-                <p>
-                  {isWalletConnected && (
-                    <div>
-                      <button
-                        disabled={loading || !personName || !mingAmount}
-                        className="bg-blue-500 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded"
-                        onClick={() => handleBurnClick()}
-                      >
-                        燃烧冥币
-                      </button>
-                      <div>
-                        或者
-                        <a
-                          className="text-blue-200 cursor-pointer"
-                          onClick={() => copyAddress()}
-                        >
-                          复制地址
-                        </a>
-                        ，通过钱包转入冥币。
-                      </div>
-                    </div>
-                  )}
-                </p>
-
-                {/* <div className="flex justify-center items-center ">
-              <Tooltip
-                className="mt-2 text-center max-w-3xl"
-                content={i18next.t("home.burn.form.learn.desc")}
-                trigger="hover"
-              >
-                <p className="mt-2 text-center text-sm text-gray-400 cursor-pointer">
-                  {i18next.t("home.burn.form.learn")}
-                </p>
-              </Tooltip>
-            </div> */}
-              </div>
+                    return (
+                      <tr key={holder.address}>
+                        <td className="px-6 py-4 text-sm text-gray-300 w-20">
+                          {index + 1}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-300">
+                          <div className="break-all">
+                            {holder.owner}
+                          </div>
+                        </td>
+                        <td className={`px-6 py-4 text-sm font-medium ${categoryColor}`}>
+                          <div className="break-words">
+                            {category}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-300 text-right">
+                          <div className="break-words">
+                            {holder.amount.toLocaleString(undefined, {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2
+                            })}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
 
-      <BurnSucceedDialog
-        open={showBurnSucceedDialog}
-        name={personName}
-        addr={recipientAddress}
-        amount={mingAmount}
-        tx={signature}
-        handleClose={() => {
-          setShowBurnSucceedDialog(false);
-        }}
-      />
+      {/* Add YouTube Videos Section */}
+      <div className="bg-[#330000] py-12 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-white text-center mb-8">What does Hellcoin do?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="aspect-w-16 aspect-h-9">
+              <ReactPlayer
+                url="https://www.youtube.com/watch?v=URYG34BYWUw"
+                width="100%"
+                height="100%"
+                controls={true}
+              />
+            </div>
+            <div className="aspect-w-16 aspect-h-9">
+              <ReactPlayer
+                url="https://www.youtube.com/watch?v=zjVpfO-ybTw"
+                width="100%"
+                height="100%"
+                controls={true}
+              />
+            </div>
+            <div className="aspect-w-16 aspect-h-9">
+              <ReactPlayer
+                url="https://www.youtube.com/watch?v=TsdSxk-qxZE"
+                width="100%"
+                height="100%"
+                controls={true}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+
   );
 });
 

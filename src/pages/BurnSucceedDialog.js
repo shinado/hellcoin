@@ -8,16 +8,16 @@ const BurnSucceedDialog = ({ open, name, addr, amount, tx, handleClose }) => {
       <Modal.Body>
         <div className="">
           <h3 className="text-3xl font-medium text-gray-900 dark:text-white">
-            赛博祭祖
+            Hellcoin Received
           </h3>
           {/* <div className="mt-2">{i18next.t("freemint.successful.body") + amount + " $MING! "}</div> */}
           <div className="mt-8 text-sm font-bold">
-            你给 {name} (地址：{addr}) 烧了{amount}个冥币。
+            You just offered {amount} $HELL to {name} (address {addr}) in the underworld. May all the dead no longer suffer from hyperinflation.. 
           </div>
-          <div className="text-sm mt-4">
+          {/* <div className="text-sm mt-4">
             我们会给燃烧一定数量的地址空投NFT，请持续关注我们的
             <a className="text-blue-500" href="https://twitter.com/ming_bi_xyz" target="_blank" rel="noopener noreferrer">官方推特</a>
-          </div>
+          </div> */}
 
           <div className="w-full flex mt-6">
             <button
@@ -26,7 +26,7 @@ const BurnSucceedDialog = ({ open, name, addr, amount, tx, handleClose }) => {
                 handleClose();
               }}
             >
-              关闭
+              Close
             </button>
           </div>
         </div>

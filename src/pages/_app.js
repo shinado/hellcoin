@@ -14,6 +14,7 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 import { MyPhantomWalletAdapter } from "@/adapter/MyPhantomWalletAdapter";
 import { Toaster } from "react-hot-toast";
+import Head from "next/head";
 
 // You must import the CSS somewhere to use the pre-built React UI components
 require("@solana/wallet-adapter-react-ui/styles.css");
@@ -37,13 +38,29 @@ function App({ Component, pageProps }) {
   const wallets = useMemo(() => [new MyPhantomWalletAdapter(), new SolflareWalletAdapter()], [network]);
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          <Component {...pageProps} />
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <>
+      <Head>
+        <title>Hellcoin</title>
+        <meta name="description" content="To the dead. Solve hyperinflation in hell once and for all." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        {/* Open Graph / Social Media Meta Tags */}
+        <meta property="og:title" content="$HELL Token - Burn to Earn" />
+        <meta property="og:description" content="Burn $HELL to the underworld. " />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hellcoin.money" />
+        <meta property="og:image" content="https://hellcoin.money/og-image.jpg" />
+      </Head>
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect>
+          <WalletModalProvider>
+            <Component {...pageProps} />
+          </WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
+    </>
+
+
   );
 }
 

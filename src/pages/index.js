@@ -5,7 +5,7 @@ import Navigation from "./navbar";
 export default function Home() {
   return (
     <div className="w-full">
-      <Navigation />
+      {/* <Navigation /> */}
       <Toaster position="top-right" reverseOrder={false} />
       <div className="absolute"/>
       <Burn />

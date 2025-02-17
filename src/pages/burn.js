@@ -244,6 +244,7 @@ const Burn = forwardRef((props, ref) => {
     const text = pinyin
       .replaceAll("l", "1")
       .replaceAll("L", "1")
+      .replaceAll("I", "i")
       .replaceAll("0", "o")
       .replaceAll("O", "o");
 
@@ -258,9 +259,16 @@ const Burn = forwardRef((props, ref) => {
     if (isBase58Only) {
       output += text;
     } else {
-      const bytesText = Buffer.from(text, "utf8");
-      const encodedText = bs58.encode(bytesText);
-      output += encodedText;
+      text.split("").forEach(char => {
+        if (base58Chars.includes(char)) {
+          output += char;
+        } else {
+          const bytesText = Buffer.from(char, "utf8");
+          const encodedText = bs58.encode(bytesText);
+          output += encodedText;
+        }
+      });
+
     }
 
     // Fill with zeros and end with DEAD to make it 44 characters
@@ -528,18 +536,18 @@ const Burn = forwardRef((props, ref) => {
                       />
                       <div className="absolute text-left left-0 w-72 p-4 bg-gray-800 text-sm text-gray-300 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-10 mt-1 shadow-lg border border-gray-700">
                         <p>
-                          The name will be transformed into a Solana address, 
-                        starting with &quot;DEAD&quot; and ending with &quot;DEADRiP&quot;, owned by NO ONE ALIVE.
+                          The name will be transformed into a Solana address,
+                          starting with &quot;DEAD&quot; and ending with &quot;DEADRiP&quot;, owned by NO ONE ALIVE.
                         </p>
                         <p className="mt-2">
-                        The $HELL you send will be no longer in circulation which causes deflation, resulting in a higher price.
+                          The $HELL you send will be no longer in circulation which causes deflation, resulting in a higher price.
                         </p>
                       </div>
                     </div>
                   </div>
                   <input
                     type="text"
-                    placeholder="Kobe Bryant"
+                    placeholder="Kobe Bryant RIP🕯️"
                     className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
                     value={personName}
                     onChange={(e) => setPersonName(e.target.value)}
@@ -642,9 +650,9 @@ const Burn = forwardRef((props, ref) => {
                     <div key={holder.address} className="p-4 border-b border-gray-700">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-gray-300 font-medium">#{index + 1}</span>
-                        <span 
-                          className="px-2 py-1 text-xs rounded-full" 
-                          style={{ 
+                        <span
+                          className="px-2 py-1 text-xs rounded-full"
+                          style={{
                             backgroundColor: `${categoryColor}20`,
                             color: categoryColor,
                             border: `1px solid ${categoryColor}`
@@ -708,9 +716,9 @@ const Burn = forwardRef((props, ref) => {
                         <td className="px-6 py-4 text-sm text-gray-300">
                           <div className="flex items-center gap-2">
                             <span className="break-all">{holder.owner}</span>
-                            <span 
-                              className="px-2 py-1 text-xs rounded-full" 
-                              style={{ 
+                            <span
+                              className="px-2 py-1 text-xs rounded-full"
+                              style={{
                                 backgroundColor: `${categoryColor}20`,
                                 color: categoryColor,
                                 border: `1px solid ${categoryColor}`

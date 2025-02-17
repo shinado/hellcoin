@@ -574,7 +574,7 @@ const Burn = forwardRef((props, ref) => {
                     onChange={(e) => setPersonName(e.target.value)}
                   />
                   {personName && (
-                    <p className="text-left text-sm mt-2">
+                    <p className="text-white text-left text-sm mt-2">
                       Address: {transformedAddress}
                     </p>
                   )}
@@ -816,6 +816,47 @@ const Burn = forwardRef((props, ref) => {
           </div>
         </div>
       </div>
+
+      {/* Add this after the YouTube section and before the closing div */}
+      <footer className="bg-[#001800] py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-gray-300">
+            <a 
+              href="https://twitter.com/hellcoin_money" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Follow on X
+            </a>
+            <a 
+              href="https://t.me/hellcoinmoney" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.223-.548.223l.188-2.623 4.823-4.35c.212-.19-.045-.295-.324-.105l-5.96 3.736-2.525-.785c-.573-.18-.584-.573.12-.848l9.873-3.805c.48-.18.905.098.853.585z"/>
+              </svg>
+              Join Community
+            </a>
+            <a 
+              href="https://docs.google.com/document/d/1AEMrs5Y7FZ3tqk9HlqlIVY89QIh6PVhfcLHTMuF6L5E/edit?usp=sharing" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Whitepaper
+            </a>
+          </div>
+        </div>
+      </footer>
 
     </div>
 

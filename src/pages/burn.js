@@ -131,6 +131,8 @@ const Burn = forwardRef((props, ref) => {
   // Add new state for top holders
   const [topHolders, setTopHolders] = useState([]);
 
+  const [tokenPrice, setTokenPrice] = useState(null);
+
   useEffect(() => {
     setIsWalletConnected(wallet.connected);
   }, [wallet.connected]);
@@ -237,6 +239,26 @@ const Burn = forwardRef((props, ref) => {
     }
   }, [wallet.connected]);
 
+  // Add function to fetch token price
+  const fetchTokenPrice = async () => {
+    try {
+      const response = await fetch('https://api.pumpfunapi.org/price/oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump');
+      const data = await response.json();
+      setTokenPrice(data.USD);
+    } catch (error) {
+      console.error('Error fetching token price:', error);
+      setTokenPrice(null);
+    }
+  };
+
+  // Add useEffect to fetch price when component mounts
+  useEffect(() => {
+    fetchTokenPrice();
+    // Optionally refresh price every minute
+    const interval = setInterval(fetchTokenPrice, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const transformToFixedBase58 = (original) => {
     const pinyin = pinyinUtil.getPinyin(original).replaceAll(" ", "");
     console.log("pinyin: ", pinyin);
@@ -268,7 +290,6 @@ const Burn = forwardRef((props, ref) => {
           output += encodedText;
         }
       });
-
     }
 
     // Fill with zeros and end with DEAD to make it 44 characters
@@ -566,14 +587,30 @@ const Burn = forwardRef((props, ref) => {
                     type="number"
                     placeholder="100,000"
                     className="mt-2 p-3 text-sm rounded-lg block w-full bg-gray-600 border-gray-500 placeholder-gray-400 text-white focus:ring-primary-500 focus:border-primary-500"
-                    // className="mt-2 p-3 block w-full border border-gray-300 rounded-md shadow-sm text-white"
                     value={mingAmount}
                     onChange={(e) => setMingAmount(e.target.value)}
                   />
-                  {isWalletConnected && (
-                    <p className="mt-2 text-left text-sm text-white">
-                      Your Balance: {tokenBalance !== null ? `${tokenBalance} $HELL` : 'Loading...'}
+                  {mingAmount && tokenPrice && (
+                    <p className="mt-2 text-left text-sm text-gray-300">
+                      ≈ ${(mingAmount * tokenPrice).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })} USD
                     </p>
+                  )}
+                  {isWalletConnected && (
+                    <div>
+                      {tokenBalance !== null && mingAmount && Number(mingAmount) > tokenBalance && (
+                        <p className="mt-1 text-left text-sm text-red-500 flex items-center gap-1">
+                          <HiX className="w-4 h-4" />
+                          Insufficient balance
+                        </p>
+                      )}
+                      <p className="text-left text-sm text-white">
+                        Your Balance: {tokenBalance !== null ? `${tokenBalance} $HELL` : 'Loading...'}
+                      </p>
+                      
+                    </div>
                   )}
 
                   {!isWalletConnected && <WalletMultiButtonDynamic className="mt-8" />}

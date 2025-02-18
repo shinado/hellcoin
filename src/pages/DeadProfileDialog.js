@@ -2,31 +2,38 @@ import React from "react";
 import { Link, Button, Modal } from "flowbite-react";
 import Image from 'next/image';
 
-const BurnSucceedDialog = ({ open, name, addr, amount, tx, handleClose }) => {
+const DeadProfileDialog = ({ open, name, portrait, addr, amount, tx, handleClose }) => {
   return (
     <Modal onClose={handleClose} show={open} size="xl" popup>
       <Modal.Header />
       <Modal.Body>
         <div className="text-center">
-          <div className="relative w-32 h-32 mx-auto mb-4">
+
+        <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-gray-300">
             <Image
-              src="/rip.png"
+              src={portrait || "/default_portrait.png"}
               alt="RIP"
               layout="fill"
               objectFit="contain"
               priority
             />
           </div>
-          
-          <h3 className="text-3xl font-medium text-gray-900 dark:text-white mb-4">
-            R.I.P. {name}
-          </h3>
+
+            {/* Name Text positioned below portrait */}
+            <div className="mt-2 w-full text-center">
+              <h3 className="text-xl text-white font-medium text-gray-900">
+                R.I.P. {name}
+              </h3>
+            </div>
           
           <div className="mt-4 text-sm font-bold text-gray-500 dark:text-gray-300">
-            You just burnt {amount} $HELL to {name} in the underworld. 
+            You just burnt {amount} $HELL to <span className="text-red-500">{name}</span> in the underworld. 
             <div className="mt-2 text-xs text-gray-400 break-all">
               (address: {addr})
             </div>
+            {/* <div className="mt-2">
+              May all the dead no longer suffer from hyperinflation.
+            </div> */}
           </div>
 
           <div className="w-full flex justify-center mt-6">
@@ -45,4 +52,4 @@ const BurnSucceedDialog = ({ open, name, addr, amount, tx, handleClose }) => {
   );
 };
 
-export default BurnSucceedDialog;
+export default DeadProfileDialog;

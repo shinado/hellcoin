@@ -34,6 +34,7 @@ import { Toaster, toast } from "react-hot-toast";
 import dynamic from 'next/dynamic';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
+import DeadProfileDialog from "./DeadProfileDialog";
 
 // Create a dynamic import for WalletMultiButton with ssr disabled
 const WalletMultiButtonDynamic = dynamic(
@@ -438,9 +439,19 @@ const Burn = forwardRef((props, ref) => {
         signature: sig,
         strategy: "confirmed", // or another strategy as per the documentation
       });
+
+      const response = await fetch('/api/namemap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: personName, address: transformedAddress })
+      });
+      const data = await response.json();
+      console.log("createNameMap data:", data);
+
       setPlayVideo(false);
       setSignature(sig);
-
       setShowBurnSucceedDialog(true);
       console.log("Transaction sent:", sig);
     } catch (e) {
@@ -529,13 +540,13 @@ const Burn = forwardRef((props, ref) => {
             {/* Content */}
             <div className="relative w-screen flex h-[90vh] justify-center items-center text-center">
               <div className="w-full max-w-xl text-center px-4 sm:px-6 lg:px-8">
-                <h1 className="mt-10 text-8xl font-extrabold text-white">Hellcoin</h1>
-                <p className="mt-4 text-lg text-white mt-[-10px]">
+                <h1 className="mt-10 text-7xl md:text-8xl font-extrabold text-white">Hellcoin</h1>
+                <p className="mt-4 text-sm md:text-lg text-white mt-[-10px]">
                   The meme coin burning hyperinflation in hell 🔥
                   {/* To the dead. Solve hyperinflation in hell once and for all. */}
                 </p>
 
-                <p className="mt-0 text-md text-gray-400 text-[14px]">
+                <p className="mt-0 text-xs md:text-md text-gray-400 text-[14px]">
                   Don&apos;t have Hellcoin Yet? Get $HELL from {" "}
                   <a
                     className="text-blue-500"
@@ -549,7 +560,7 @@ const Burn = forwardRef((props, ref) => {
                 <div className="mt-8 px-4 sm:px-6 lg:px-8">
                   <div className="flex items-center gap-2">
                     <p className="mt-1 text-md font-bold text-white text-left">
-                      Transfer to
+                      Burn to
                     </p>
                     <div className="relative group">
                       <HiExclamationCircle
@@ -574,7 +585,7 @@ const Burn = forwardRef((props, ref) => {
                     onChange={(e) => setPersonName(e.target.value)}
                   />
                   {personName && (
-                    <p className="text-white text-left text-sm mt-2">
+                    <p className="text-white text-left text-xs mt-2 md:text-sm">
                       Address: {transformedAddress}
                     </p>
                   )}
@@ -609,7 +620,7 @@ const Burn = forwardRef((props, ref) => {
                       <p className="text-left text-sm text-white">
                         Your Balance: {tokenBalance !== null ? `${tokenBalance} $HELL` : 'Loading...'}
                       </p>
-                      
+
                     </div>
                   )}
 
@@ -637,9 +648,13 @@ const Burn = forwardRef((props, ref) => {
 
         <BurnSucceedDialog
           open={showBurnSucceedDialog}
-          name={personName}
-          addr={transformedAddress}
-          amount={mingAmount}
+          portrait={'/Audrey_Hepburn.jpg'}
+          // name={personName}
+          // addr={transformedAddress}
+          // amount={mingAmount}
+          name={'Audrey Hepburn'}
+          addr={'DEADooooooooooooooooooooooDEADRiP'}
+          amount={'100,000'}
           tx={signature}
           handleClose={() => {
             setShowBurnSucceedDialog(false);
@@ -662,7 +677,7 @@ const Burn = forwardRef((props, ref) => {
 
           {/* Add Top Holders Section */}
           <div className="max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-white text-center mb-6">Top 10 Holders</h3>
+            <h3 className="text-2xl font-bold text-white text-center mb-6">Deadboard</h3>
             <div className="bg-gray-800 rounded-lg overflow-hidden overflow-x-auto">
               {/* Mobile view */}
               <div className="md:hidden">
@@ -787,7 +802,7 @@ const Burn = forwardRef((props, ref) => {
       <div className="bg-[#002800] py-12 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-white text-center">What does Hellcoin do?</h2>
-          <div className="text-center text-l">BUNR. DONNOT HODL. Every &#36;HELL you offered to the underworld causes &#36;HELL deflation, resulting in a higher price. </div>
+          <div className="text-center text-l text-white">BUNR. DONNOT HODL. Every &#36;HELL you offered to the underworld causes &#36;HELL deflation, resulting in a higher price. </div>
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="aspect-w-16 aspect-h-9">
               <ReactPlayer
@@ -821,9 +836,9 @@ const Burn = forwardRef((props, ref) => {
       <footer className="bg-[#001800] py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-gray-300">
-            <a 
-              href="https://twitter.com/hellcoin_money" 
-              target="_blank" 
+            <a
+              href="https://twitter.com/hellcoin_money"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 hover:text-white transition-colors"
             >
@@ -832,20 +847,20 @@ const Burn = forwardRef((props, ref) => {
               </svg>
               Follow on X
             </a>
-            <a 
-              href="https://t.me/hellcoinmoney" 
-              target="_blank" 
+            <a
+              href="https://t.me/hellcoinmoney"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 hover:text-white transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.223-.548.223l.188-2.623 4.823-4.35c.212-.19-.045-.295-.324-.105l-5.96 3.736-2.525-.785c-.573-.18-.584-.573.12-.848l9.873-3.805c.48-.18.905.098.853.585z"/>
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.223-.548.223l.188-2.623 4.823-4.35c.212-.19-.045-.295-.324-.105l-5.96 3.736-2.525-.785c-.573-.18-.584-.573.12-.848l9.873-3.805c.48-.18.905.098.853.585z" />
               </svg>
               Join Community
             </a>
-            <a 
-              href="https://docs.google.com/document/d/1AEMrs5Y7FZ3tqk9HlqlIVY89QIh6PVhfcLHTMuF6L5E/edit?usp=sharing" 
-              target="_blank" 
+            <a
+              href="https://docs.google.com/document/d/1AEMrs5Y7FZ3tqk9HlqlIVY89QIh6PVhfcLHTMuF6L5E/edit?usp=sharing"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 hover:text-white transition-colors"
             >

@@ -648,13 +648,9 @@ const Burn = forwardRef((props, ref) => {
 
         <BurnSucceedDialog
           open={showBurnSucceedDialog}
-          portrait={'/Audrey_Hepburn.jpg'}
-          // name={personName}
-          // addr={transformedAddress}
-          // amount={mingAmount}
-          name={'Audrey Hepburn'}
-          addr={'DEADooooooooooooooooooooooDEADRiP'}
-          amount={'100,000'}
+          name={personName}
+          addr={transformedAddress}
+          amount={mingAmount}
           tx={signature}
           handleClose={() => {
             setShowBurnSucceedDialog(false);

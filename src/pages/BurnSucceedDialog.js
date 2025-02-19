@@ -25,7 +25,9 @@ const BurnSucceedDialog = ({ open, name, addr, amount, tx, handleClose }) => {
           <div className="mt-4 text-sm font-bold text-gray-500 dark:text-gray-300">
             You just burnt {amount} $HELL to {name} in the underworld. 
             <div className="mt-2 text-xs text-gray-400 break-all">
+              <a href={`https://solscan.io/address/${addr}`} target="_blank" rel="noopener noreferrer">
               (address: {addr})
+              </a>
             </div>
           </div>
 

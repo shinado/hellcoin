@@ -645,7 +645,6 @@ const Burn = forwardRef((props, ref) => {
           </div>
         </div>
 
-
         <BurnSucceedDialog
           open={showBurnSucceedDialog}
           name={personName}

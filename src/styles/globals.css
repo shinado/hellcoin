@@ -65,3 +65,29 @@ body {
 .fadeInOut {
   animation: fadeInOut 4s ease-in-out;
 }
+
+
+/**
+ * Custom styles for markdown
+ */
+p {
+  @apply mb-4;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-bold
+    mb-1;
+}
+
+h1 {
+  @apply text-3xl;
+}
+
+h2 {
+  @apply text-xl;
+}

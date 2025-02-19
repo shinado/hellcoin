@@ -35,6 +35,7 @@ import dynamic from 'next/dynamic';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 import DeadProfileDialog from "./DeadProfileDialog";
+import Link from "next/link";
 
 // Create a dynamic import for WalletMultiButton with ssr disabled
 const WalletMultiButtonDynamic = dynamic(
@@ -831,6 +832,15 @@ const Burn = forwardRef((props, ref) => {
       <footer className="bg-[#001800] py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-center items-center gap-6 text-gray-300">
+            <Link
+              href="/blog"
+              className="flex items-center gap-2 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2" />
+              </svg>
+              Blog
+            </Link>
             <a
               href="https://twitter.com/hellcoin_money"
               target="_blank"
@@ -859,7 +869,7 @@ const Burn = forwardRef((props, ref) => {
               rel="noopener noreferrer"
               className="flex items-center gap-2 hover:text-white transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               Whitepaper

@@ -60,53 +60,17 @@ const Burn = forwardRef((props, ref) => {
 
   const getTokenHolders = async () => {
     try {
-      const netWork = "https://patient-fittest-meadow.solana-mainnet.quiknode.pro/6b4d510e85db2b74aff949b2c493a937a2353f13/";
-      const connection = new Connection(netWork, "confirmed");
-      const mintPubKey = new PublicKey(mintAddress);
-
-      // Get all token accounts for this mint
-      const tokenAccounts = await connection.getProgramAccounts(
-        TOKEN_PROGRAM_ID,
-        {
-          filters: [
-            {
-              dataSize: 165, // Size of token account data
-            },
-            {
-              memcmp: {
-                offset: 0, // Offset of mint address in token account data
-                bytes: mintPubKey.toBase58(), // Mint address to filter by
-              },
-            },
-          ],
-        }
-      );
-
-      // Process the accounts to get holder information
-      const holders = tokenAccounts.map(account => {
-        const accountData = AccountLayout.decode(account.account.data);
-        const amount = Number(accountData.amount) / (10 ** 6); // Adjust decimals as needed
-        const owner = new PublicKey(accountData.owner).toString();
-
-        return {
-          owner,
-          amount,
-          address: account.pubkey.toString()
-        };
-      });
-
-      // Filter out zero balance accounts
-      const activeHolders = holders.filter(holder => holder.amount > 0);
-
-      // Sort by amount (descending)
-      activeHolders.sort((a, b) => b.amount - a.amount);
-      return activeHolders;
+      const response = await fetch('/api/tokenHolders');
+      if (!response.ok) {
+        throw new Error('Failed to fetch token holders');
+      }
+      const holders = await response.json();
+      return holders;
     } catch (error) {
       console.error('Error fetching token holders:', error);
       return [];
     }
   };
-
 
   const mintAddress = "oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump";
   const wallet = useWallet();
@@ -216,16 +180,12 @@ const Burn = forwardRef((props, ref) => {
     if (!wallet.publicKey) return;
 
     try {
-      const netWork = "https://patient-fittest-meadow.solana-mainnet.quiknode.pro/6b4d510e85db2b74aff949b2c493a937a2353f13/";
-      const connection = new Connection(netWork, "confirmed");
-      const mintPubKey = new PublicKey(mintAddress);
-      const tokenAccount = await getAssociatedTokenAddress(
-        mintPubKey,
-        wallet.publicKey
-      );
-
-      const balance = await connection.getTokenAccountBalance(tokenAccount);
-      setTokenBalance(balance.value.uiAmount);
+      const response = await fetch(`/api/tokenBalance?walletAddress=${wallet.publicKey.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch token balance');
+      }
+      const data = await response.json();
+      setTokenBalance(data.balance);
     } catch (error) {
       console.error("Error fetching token balance:", error);
       setTokenBalance(null);
@@ -363,93 +323,49 @@ const Burn = forwardRef((props, ref) => {
     amount
   ) {
     try {
-      const netWork =
-        "https://patient-fittest-meadow.solana-mainnet.quiknode.pro/6b4d510e85db2b74aff949b2c493a937a2353f13/"; //主网
-      const connection = new Connection(netWork, "confirmed");
-
-      const decimals = 6;
-      const mintPubKey = new PublicKey(mintAddress);
-      const fromPubkey = new PublicKey(senderAddress);
-      const toPubkey = new PublicKey(recipientAddress);
-
-      const fromAssociatedTokenAddress = await getAssociatedTokenAddress(
-        mintPubKey,
-        fromPubkey
-      );
-
-      const destinationAssociatedTokenAddress = await getAssociatedTokenAddress(
-        mintPubKey,
-        toPubkey
-      );
-
-      const destination = await connection.getAccountInfo(
-        destinationAssociatedTokenAddress
-      );
-
-      const tx = new Transaction();
-
-      if (!destination) {
-        /**
-         * @param payer                    Payer of the initialization fees
-         * @param associatedToken          New associated token account
-         * @param owner                    Owner of the new account
-         * @param mint                     Token mint account
-         */
-        tx.add(
-          createAssociatedTokenAccountInstruction(
-            fromPubkey, //fee payer
-            destinationAssociatedTokenAddress,
-            toPubkey,
-            mintPubKey
-          )
-        );
-        console.log("create associated token account: ", tx);
-      }
-
-      // Convert the amount to a BigInt, scaling up to preserve the desired number of decimals
-      const amountBigInt = BigInt(Math.round(amount * 10 ** decimals));
-
-      /**
-       *
-       * @param source       Source account
-       * @param destination  Destination account
-       * @param owner        Owner of the source account
-       * @param amount       Number of tokens to transfer
-       */
-      const splTransferIx = createTransferInstruction(
-        fromAssociatedTokenAddress,
-        destinationAssociatedTokenAddress,
-        fromPubkey,
-        amountBigInt
-      );
-
-      tx.add(splTransferIx);
-      tx.recentBlockhash = (
-        await connection.getLatestBlockhash("max")
-      ).blockhash;
-      tx.feePayer = fromPubkey;
-
-      const signedTransaction = await wallet.signTransaction(tx);
-
-      setPlayVideo(true);
-      const sig = await connection.sendRawTransaction(
-        signedTransaction.serialize()
-      );
-
-      await connection.confirmTransaction({
-        signature: sig,
-        strategy: "confirmed", // or another strategy as per the documentation
-      });
-
-      const response = await fetch('/api/namemap', {
+      // Get the prepared transaction from the backend
+      const response = await fetch('/api/prepareTransfer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: personName, address: transformedAddress })
+        body: JSON.stringify({
+          senderAddress,
+          recipientAddress,
+          amount
+        })
       });
-      const data = await response.json();
-      console.log("createNameMap data:", data);
+
+      if (!response.ok) {
+        throw new Error('Failed to prepare transfer');
+      }
+
+      const { transaction: serializedTransaction } = await response.json();
+
+      // Deserialize the transaction
+      const tx = Transaction.from(Buffer.from(serializedTransaction, 'base64'));
+
+      const signedTransaction = await wallet.signTransaction(tx);
+      const signedTransactionSerialized = signedTransaction.serialize();
+
+      setPlayVideo(true);
+
+      // Send the signed transaction to the backend
+      const sendResponse = await fetch('/api/sendTransaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          signedTransaction: Array.from(signedTransactionSerialized)
+        })
+      });
+
+      if (!sendResponse.ok) {
+        throw new Error('Failed to send transaction');
+      }
+
+      const { signature: sig } = await sendResponse.json();
 
       setPlayVideo(false);
       setSignature(sig);
@@ -457,8 +373,8 @@ const Burn = forwardRef((props, ref) => {
       console.log("Transaction sent:", sig);
     } catch (e) {
       setPlayVideo(false);
-      // show error
       console.log(e);
+      throw e;
     }
   }
 

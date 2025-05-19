@@ -60,7 +60,7 @@ const Burn = forwardRef((props, ref) => {
 
   const getTokenHolders = async () => {
     try {
-      const netWork = "https://wiser-evocative-season.solana-mainnet.quiknode.pro/c703e8fe265b859cdde46e6b89f792b5573a3b98/";
+      const netWork = "https://patient-fittest-meadow.solana-mainnet.quiknode.pro/6b4d510e85db2b74aff949b2c493a937a2353f13/";
       const connection = new Connection(netWork, "confirmed");
       const mintPubKey = new PublicKey(mintAddress);
 
@@ -216,7 +216,7 @@ const Burn = forwardRef((props, ref) => {
     if (!wallet.publicKey) return;
 
     try {
-      const netWork = "https://wiser-evocative-season.solana-mainnet.quiknode.pro/c703e8fe265b859cdde46e6b89f792b5573a3b98/";
+      const netWork = "https://patient-fittest-meadow.solana-mainnet.quiknode.pro/6b4d510e85db2b74aff949b2c493a937a2353f13/";
       const connection = new Connection(netWork, "confirmed");
       const mintPubKey = new PublicKey(mintAddress);
       const tokenAccount = await getAssociatedTokenAddress(
@@ -364,7 +364,7 @@ const Burn = forwardRef((props, ref) => {
   ) {
     try {
       const netWork =
-        "https://wiser-evocative-season.solana-mainnet.quiknode.pro/c703e8fe265b859cdde46e6b89f792b5573a3b98/"; //主网
+        "https://patient-fittest-meadow.solana-mainnet.quiknode.pro/6b4d510e85db2b74aff949b2c493a937a2353f13/"; //主网
       const connection = new Connection(netWork, "confirmed");
 
       const decimals = 6;

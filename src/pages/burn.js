@@ -604,6 +604,9 @@ const Burn = forwardRef((props, ref) => {
                     if (holder.owner.startsWith('DEAD') && (holder.owner.endsWith('DEADRiP') || holder.owner.endsWith('DEADDEAD'))) {
                       category = "Underworld Holdings";
                       categoryColor = "#36A2EB";
+                    } else if(holder.owner == '89i8GFzzmda7m8ks9eTdWk12vLQqL2dXeEyZHKsW7Yso'){
+                      category = "Developer Holdings";
+                      categoryColor = "#FFCE56";
                     } else {
                       category = "Real World Holdings";
                       categoryColor = "#FFCE56";

@@ -12,15 +12,28 @@ import {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// Middleware - Request logging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('  Body:', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
+app.use(cors({
+  origin: '*', // In production, specify mobile app origin
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
 
 // Constants
-const RPC_ENDPOINT = process.env.RPC_ENDPOINT || 'https://api.mainnet-beta.solana.com';
-const MINT_ADDRESS = '6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN'; // USDC for testing
+const RPC_ENDPOINT = process.env.RPC_ENDPOINT || 'https://mainnet.helius-rpc.com/?api-key=2c795199-fdd7-4dd9-9eaf-d900a41016a3';
+const MINT_ADDRESS = 'oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump'; // HELL token
 const TOKEN_DECIMALS = 6;
 const TEST_MODE = process.env.TEST_MODE === 'true';
+const JUPITER_API_KEY = process.env.JUPITER_API_KEY;
 
 // Initialize Solana connection
 const connection = new Connection(RPC_ENDPOINT, 'confirmed');
@@ -32,39 +45,82 @@ const mintPubKey = new PublicKey(MINT_ADDRESS);
  */
 app.get('/api/token-holders', async (req, res) => {
   try {
-    // Get all token accounts for this mint
-    const tokenAccounts = await connection.getProgramAccounts(
-      TOKEN_PROGRAM_ID,
-      {
-        filters: [
-          {
-            dataSize: 165, // Size of token account data
-          },
-          {
-            memcmp: {
-              offset: 0, // Offset of mint address in token account data
-              bytes: mintPubKey.toBase58(),
-            },
-          },
-        ],
-      }
-    );
+    // Use Helius getProgramAccountsv2 API with pagination
+    const rpcUrl = new URL(RPC_ENDPOINT);
+    const allHolders = [];
+    let page = 1;
+    let hasMore = true;
 
-    // Process the accounts to get holder information
-    const holders = tokenAccounts.map(account => {
-      const accountData = AccountLayout.decode(account.account.data);
-      const amount = Number(accountData.amount) / (10 ** TOKEN_DECIMALS);
-      const owner = new PublicKey(accountData.owner).toString();
-
-      return {
-        owner,
-        amount,
-        address: account.pubkey.toString()
+    while (hasMore && page <= 10) { // Limit to 10 pages to prevent infinite loops
+      const payload = {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getProgramAccounts",
+        params: [
+          TOKEN_PROGRAM_ID.toBase58(),
+          {
+            encoding: "base64",
+            filters: [
+              {
+                dataSize: 165
+              },
+              {
+                memcmp: {
+                  offset: 0,
+                  bytes: mintPubKey.toBase58()
+                }
+              }
+            ],
+            page: page,
+            limit: 1000 // Helius pagination limit
+          }
+        ]
       };
-    });
+
+      const response = await fetch(rpcUrl.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Helius RPC error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error.message);
+      }
+
+      const accounts = data.result || [];
+      if (accounts.length === 0) {
+        hasMore = false;
+      } else {
+        // Process the accounts
+        for (const account of accounts) {
+          const accountData = AccountLayout.decode(Buffer.from(account.account.data[0], 'base64'));
+          const amount = Number(accountData.amount) / (10 ** TOKEN_DECIMALS);
+          const owner = new PublicKey(accountData.owner).toString();
+
+          allHolders.push({
+            owner,
+            amount,
+            address: account.pubkey
+          });
+        }
+
+        // If we got less than the limit, we've reached the end
+        if (accounts.length < 1000) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      }
+    }
 
     // Filter out zero balance accounts
-    const activeHolders = holders.filter(holder => holder.amount > 0);
+    const activeHolders = allHolders.filter(holder => holder.amount > 0);
 
     // Sort by amount (descending)
     activeHolders.sort((a, b) => b.amount - a.amount);
@@ -91,14 +147,23 @@ app.get('/api/token-balance/:walletAddress', async (req, res) => {
       true // allowOwnerOffCurve - enable PDAs support
     );
 
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), 10000)
+    );
+
     try {
-      const balance = await connection.getTokenAccountBalance(tokenAccount);
+      const balance = await Promise.race([
+        connection.getTokenAccountBalance(tokenAccount),
+        timeoutPromise
+      ]);
       res.json({
         success: true,
         data: { balance: balance.value.uiAmount || 0 }
       });
     } catch (error) {
-      // Token account doesn't exist, return 0 balance
+      // Token account doesn't exist or timeout, return 0 balance
+      console.log('Token account not found or timeout:', error.message);
       res.json({ success: true, data: { balance: 0 } });
     }
   } catch (error) {
@@ -288,6 +353,9 @@ app.get('/api/quote', async (req, res) => {
     quoteUrl.searchParams.append('outputMint', outputMint);
     quoteUrl.searchParams.append('amount', inputAmount.toString());
     quoteUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    if (JUPITER_API_KEY) {
+      quoteUrl.searchParams.append('api-key', JUPITER_API_KEY);
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -379,6 +447,9 @@ app.post('/api/prepare-buy', async (req, res) => {
     quoteUrl.searchParams.append('outputMint', MINT_ADDRESS);
     quoteUrl.searchParams.append('amount', inputAmount.toString());
     quoteUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    if (JUPITER_API_KEY) {
+      quoteUrl.searchParams.append('api-key', JUPITER_API_KEY);
+    }
 
     const quoteResponse = await fetch(quoteUrl.toString());
     if (!quoteResponse.ok) {
@@ -388,6 +459,9 @@ app.post('/api/prepare-buy', async (req, res) => {
 
     // Get swap transaction from Jupiter
     const swapUrl = new URL('https://quote-api.jup.ag/v6/swap');
+    if (JUPITER_API_KEY) {
+      swapUrl.searchParams.append('api-key', JUPITER_API_KEY);
+    }
     const swapRequestBody = {
       quoteResponse: quoteData,
       userPublicKey: walletAddress,
@@ -499,6 +573,9 @@ app.post('/api/prepare-sell', async (req, res) => {
     quoteUrl.searchParams.append('outputMint', SOL_MINT);
     quoteUrl.searchParams.append('amount', inputAmount.toString());
     quoteUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    if (JUPITER_API_KEY) {
+      quoteUrl.searchParams.append('api-key', JUPITER_API_KEY);
+    }
 
     const quoteResponse = await fetch(quoteUrl.toString());
     if (!quoteResponse.ok) {
@@ -508,6 +585,9 @@ app.post('/api/prepare-sell', async (req, res) => {
 
     // Get swap transaction from Jupiter
     const swapUrl = new URL('https://quote-api.jup.ag/v6/swap');
+    if (JUPITER_API_KEY) {
+      swapUrl.searchParams.append('api-key', JUPITER_API_KEY);
+    }
     const swapRequestBody = {
       quoteResponse: quoteData,
       userPublicKey: walletAddress,

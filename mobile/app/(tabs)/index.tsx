@@ -214,6 +214,19 @@ export default function BurnScreen() {
             <Text className="text-lg text-white text-center mt-2">
               {t('burn.subtitle')}
             </Text>
+
+            {/* Token Price Display */}
+            {tokenPrice !== null && (
+              <View className="bg-gray-800/80 px-6 py-3 rounded-lg mt-4">
+                <Text className="text-gray-400 text-sm text-center mb-1">
+                  {t('burn.currentPrice')}
+                </Text>
+                <Text className="text-2xl font-bold text-white text-center">
+                  ${tokenPrice.toFixed(8)}
+                </Text>
+              </View>
+            )}
+
             <Text className="text-sm text-gray-400 text-center mt-1">
               {t('burn.getStarted')}{' '}
               <Link href="/token" asChild>

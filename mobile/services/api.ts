@@ -11,11 +11,10 @@ const getBackendUrl = () => {
   if (process.env.EXPO_PUBLIC_BACKEND_URL) {
     return process.env.EXPO_PUBLIC_BACKEND_URL;
   }
-  // Development default - use local IP address for mobile device testing
-  // Replace 192.168.1.X with your computer's actual local IP address
-  if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    return 'http://192.168.31.23:3000';
-  }
+  // // Replace 192.168.1.X with your computer's actual local IP address
+  // if (typeof __DEV__ !== 'undefined' && __DEV__) {
+  //   return 'http://192.168.31.23:3000';
+  // }
   // Production URL - Railway deployed backend
   return 'https://hellcoin-production-4fa8.up.railway.app';
 };

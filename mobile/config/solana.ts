@@ -4,7 +4,6 @@
 export const RPC_ENDPOINT = 'https://patient-fittest-meadow.solana-mainnet.quiknode.pro/6b4d510e85db2b74aff949b2c493a937a2353f13/';
 
 // Token constants
-export const MINT_ADDRESS = 'oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump';
 export const TOKEN_DECIMALS = 6;
 
 // SOL constants
@@ -19,3 +18,14 @@ export const JUPITER_SWAP_API = 'https://quote-api.jup.ag/v6/swap';
 // Swap configuration
 export const SLIPPAGE_BPS = 100; // 1% slippage (100 basis points)
 export const QUOTE_TIMEOUT = 10000; // 10 seconds
+
+// Mint address configuration
+// IMPORTANT: This is a fallback value only!
+// The actual mint address should be fetched from the backend API using api.getMintAddress()
+export const FALLBACK_MINT_ADDRESS = 'oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump';
+
+/**
+ * @deprecated Use api.getMintAddress() instead for dynamic fetching
+ * This synchronous export is maintained for backward compatibility only
+ */
+export const MINT_ADDRESS = FALLBACK_MINT_ADDRESS;

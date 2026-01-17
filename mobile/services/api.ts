@@ -76,6 +76,9 @@ export interface ChartDataResponse {
 }
 
 class ApiService {
+  private mintAddressCache: { address: string; timestamp: number } | null = null;
+  private readonly MINT_ADDRESS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
   private async fetchWithErrorHandling(url: string, options?: RequestInit): Promise<Response> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -342,6 +345,57 @@ class ApiService {
         time_from: 0,
         time_to: 0
       };
+    }
+  }
+
+  /**
+   * Get the mint address from backend API
+   * Implements in-memory caching with 5-minute expiration
+   */
+  async getMintAddress(): Promise<string> {
+    try {
+      // Check cache first
+      if (this.mintAddressCache) {
+        const age = Date.now() - this.mintAddressCache.timestamp;
+        if (age < this.MINT_ADDRESS_CACHE_TTL) {
+          console.log('[MintAddress] Using cached address');
+          return this.mintAddressCache.address;
+        }
+      }
+
+      // Fetch from backend
+      const response = await this.fetchWithErrorHandling(
+        `${BACKEND_URL}/api/mint-address`
+      );
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch mint address');
+      }
+
+      const address = result.data.mintAddress;
+
+      // Update cache
+      this.mintAddressCache = {
+        address,
+        timestamp: Date.now()
+      };
+
+      console.log('[MintAddress] Fetched and cached new address');
+      return address;
+    } catch (error: any) {
+      console.error('Error fetching mint address:', error);
+
+      // If we have a cached value (even if expired), use it as fallback
+      if (this.mintAddressCache) {
+        console.log('[MintAddress] Using stale cache as fallback');
+        return this.mintAddressCache.address;
+      }
+
+      // Final fallback to hardcoded value
+      const FALLBACK_MINT_ADDRESS = 'oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump';
+      console.log('[MintAddress] Using hardcoded fallback address');
+      return FALLBACK_MINT_ADDRESS;
     }
   }
 }

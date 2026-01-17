@@ -8,7 +8,8 @@ import {
   createTransferInstruction,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
-import { RPC_ENDPOINT, MINT_ADDRESS, TOKEN_DECIMALS } from '../config/solana';
+import { RPC_ENDPOINT, MINT_ADDRESS as FALLBACK_MINT_ADDRESS, TOKEN_DECIMALS } from '../config/solana';
+const MINT_ADDRESS = FALLBACK_MINT_ADDRESS; // Alias for clarity
 
 export interface TokenHolder {
   address: string;
@@ -35,10 +36,11 @@ class RPCService {
   /**
    * Get all token holders for the HELL token
    */
-  async getTokenHolders(): Promise<TokenHolder[]> {
+  async getTokenHolders(mintAddress?: string): Promise<TokenHolder[]> {
     try {
       const connection = this.getConnection();
-      const mintPubKey = new PublicKey(MINT_ADDRESS);
+      const address = mintAddress || MINT_ADDRESS;
+      const mintPubKey = new PublicKey(address);
 
       // Get all token accounts for this mint
       const tokenAccounts = await connection.getProgramAccounts(
@@ -87,10 +89,11 @@ class RPCService {
   /**
    * Get token balance for a specific wallet address
    */
-  async getTokenBalance(walletAddress: string): Promise<number> {
+  async getTokenBalance(walletAddress: string, mintAddress?: string): Promise<number> {
     try {
       const connection = this.getConnection();
-      const mintPubKey = new PublicKey(MINT_ADDRESS);
+      const address = mintAddress || MINT_ADDRESS;
+      const mintPubKey = new PublicKey(address);
       const walletPubKey = new PublicKey(walletAddress);
 
       const tokenAccount = await getAssociatedTokenAddress(
@@ -118,11 +121,13 @@ class RPCService {
   async prepareTransfer(
     senderAddress: string,
     recipientAddress: string,
-    amount: number
+    amount: number,
+    mintAddress?: string
   ): Promise<PrepareTransferResponse> {
     try {
       const connection = this.getConnection();
-      const mintPubKey = new PublicKey(MINT_ADDRESS);
+      const address = mintAddress || MINT_ADDRESS;
+      const mintPubKey = new PublicKey(address);
       const fromPubkey = new PublicKey(senderAddress);
       const toPubkey = new PublicKey(recipientAddress);
 

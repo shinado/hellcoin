@@ -31,7 +31,7 @@ app.use(express.json());
 
 // Constants
 const RPC_ENDPOINT = process.env.RPC_ENDPOINT || 'https://mainnet.helius-rpc.com/?api-key=2c795199-fdd7-4dd9-9eaf-d900a41016a3';
-const MINT_ADDRESS = 'oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump'; // HELL token
+const MINT_ADDRESS = process.env.MINT_ADDRESS || 'oLMyKTuqw8foxar2b11aZf7k7f4a9M8TRme5bh8pump'; // HELL token
 const TOKEN_DECIMALS = 6;
 const TEST_MODE = process.env.TEST_MODE === 'true';
 const JUPITER_API_KEY = process.env.JUPITER_API_KEY;
@@ -719,6 +719,20 @@ app.post('/api/prepare-sell', async (req, res) => {
  */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
+});
+
+/**
+ * GET /api/mint-address
+ * Get the configured mint address for the HELL token
+ */
+app.get('/api/mint-address', (req, res) => {
+  console.log(`[MintAddress] Serving mint address: ${MINT_ADDRESS}`);
+  res.json({
+    success: true,
+    data: {
+      mintAddress: MINT_ADDRESS
+    }
+  });
 });
 
 /**

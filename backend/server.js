@@ -264,19 +264,18 @@ app.post('/api/prepare-transfer', async (req, res) => {
 /**
  * GET /api/token-price
  * Get token price in USD by getting a quote from Jupiter Ultra API
- * Uses a 1 SOL input to get the SOL/Token price, then converts to USD
+ * Uses a 1 USDT input to get the direct USD/Token price
  */
 app.get('/api/token-price', async (req, res) => {
   try {
-    const SOL_MINT = 'So11111111111111111111111111111111111111112';
-    const oneSOL = 1e9; // 1 SOL in lamports
-    const SOL_USD_PRICE = 240; // Approximate SOL price in USD - update this periodically or fetch from API
+    const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
+    const oneUSDT = 1e6; // 1 USDT in lamports
 
-    // Use Jupiter Ultra API to get a quote for 1 SOL
+    // Use Jupiter Ultra API to get a quote for 1 USDT
     const orderUrl = new URL('https://api.jup.ag/ultra/v1/order');
-    orderUrl.searchParams.append('inputMint', SOL_MINT);
+    orderUrl.searchParams.append('inputMint', USDT_MINT);
     orderUrl.searchParams.append('outputMint', MINT_ADDRESS);
-    orderUrl.searchParams.append('amount', oneSOL.toString());
+    orderUrl.searchParams.append('amount', oneUSDT.toString());
     orderUrl.searchParams.append('slippageBps', '100'); // 1% slippage
     orderUrl.searchParams.append('onlyQuote', 'true'); // Only get quote
 
@@ -301,17 +300,14 @@ app.get('/api/token-price', async (req, res) => {
 
     const quoteData = await response.json();
 
-    // Calculate price: SOL per token (inverse of tokens per SOL)
-    // Jupiter returns how many tokens you get for 1 SOL
-    // Price = 1 SOL / (output tokens in token units)
+    // Calculate USD price per token
+    // Jupiter returns how many tokens you get for 1 USDT
+    // Price = 1 USDT / (output tokens in token units)
     const outputTokens = quoteData.outAmount
       ? parseInt(quoteData.outAmount) / 10 ** TOKEN_DECIMALS
       : 0;
 
-    const solPerToken = outputTokens > 0 ? 1 / outputTokens : 0;
-
-    // Convert to USD price
-    const price = solPerToken * SOL_USD_PRICE;
+    const price = outputTokens > 0 ? 1 / outputTokens : 0;
 
     res.json({ success: true, data: { price } });
   } catch (error) {

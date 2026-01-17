@@ -320,12 +320,15 @@ app.get('/api/token-price', async (req, res) => {
  * GET /api/token-chart-data
  * Get historical OHLCV price data from Birdeye for candlestick chart
  * Query params:
- *   - timeframe: '1h', '6h', '1d', etc. (default: '6h')
+ *   - timeframe: '1M', '5M', '15M', '30M', '1H', '4H', '1D' (default: '1H') - MUST be uppercase
  *   - days: number of days to fetch (default: 7)
  */
 app.get('/api/token-chart-data', async (req, res) => {
   try {
-    const { timeframe = '6h', days = 7 } = req.query;
+    const { timeframe = '1h', days = 7 } = req.query;
+
+    // Convert timeframe to uppercase (Birdeye API requires uppercase: 1H, 4H, 1D, etc.)
+    const timeframeUpper = timeframe.toUpperCase();
 
     // Calculate time range (unix timestamps in seconds)
     const time_to = Math.floor(Date.now() / 1000);
@@ -346,11 +349,11 @@ app.get('/api/token-chart-data', async (req, res) => {
       });
     }
 
-    // Call Birdeye API
+    // Call Birdeye V1 OHLCV API (K-line/candlestick data)
     const birdeyeUrl = 'https://public-api.birdeye.so/defi/ohlcv';
     const params = new URLSearchParams({
       address: MINT_ADDRESS,
-      type: timeframe,
+      type: timeframeUpper,
       time_from: time_from.toString(),
       time_to: time_to.toString(),
       currency: 'usd'
@@ -385,7 +388,7 @@ app.get('/api/token-chart-data', async (req, res) => {
       success: true,
       data: {
         items: chartData,
-        timeframe,
+        timeframe: timeframeUpper,
         time_from,
         time_to
       }

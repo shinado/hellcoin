@@ -300,10 +300,14 @@ app.get('/api/token-price', async (req, res) => {
 
     const quoteData = await response.json();
 
-    // Calculate price: output tokens per 1 SOL
-    const price = quoteData.outAmount
+    // Calculate price: SOL per token (inverse of tokens per SOL)
+    // Jupiter returns how many tokens you get for 1 SOL
+    // Price = 1 SOL / (output tokens in token units)
+    const outputTokens = quoteData.outAmount
       ? parseInt(quoteData.outAmount) / 10 ** TOKEN_DECIMALS
       : 0;
+
+    const price = outputTokens > 0 ? 1 / outputTokens : 0;
 
     res.json({ success: true, data: { price } });
   } catch (error) {

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
@@ -262,23 +263,47 @@ app.post('/api/prepare-transfer', async (req, res) => {
 
 /**
  * GET /api/token-price
- * Get token price from Jupiter API
+ * Get token price by getting a quote from Jupiter Ultra API
+ * Uses a 1 SOL input to get the SOL/Token price
  */
 app.get('/api/token-price', async (req, res) => {
   try {
-    const priceUrl = `https://api.jup.ag/price/v2?ids=${MINT_ADDRESS}`;
+    const SOL_MINT = 'So11111111111111111111111111111111111111112';
+    const oneSOL = 1e9; // 1 SOL in lamports
+
+    // Use Jupiter Ultra API to get a quote for 1 SOL
+    const orderUrl = new URL('https://api.jup.ag/ultra/v1/order');
+    orderUrl.searchParams.append('inputMint', SOL_MINT);
+    orderUrl.searchParams.append('outputMint', MINT_ADDRESS);
+    orderUrl.searchParams.append('amount', oneSOL.toString());
+    orderUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    orderUrl.searchParams.append('onlyQuote', 'true'); // Only get quote
+
+    const headers = {};
+    if (JUPITER_API_KEY) {
+      headers['x-api-key'] = JUPITER_API_KEY;
+    }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased timeout
 
-    const response = await fetch(priceUrl, { signal: controller.signal });
+    const response = await fetch(orderUrl.toString(), {
+      headers,
+      signal: controller.signal
+    });
     clearTimeout(timeoutId);
 
-    const data = await response.json();
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Jupiter Ultra API error: ${response.status} - ${errorText}`);
+    }
 
-    // Jupiter API v2 returns: { data: { [mintAddress]: { price: "0.00001234" } } }
-    const tokenData = data?.data?.[MINT_ADDRESS];
-    const price = tokenData?.price ? parseFloat(tokenData.price) : 0;
+    const quoteData = await response.json();
+
+    // Calculate price: output tokens per 1 SOL
+    const price = quoteData.outAmount
+      ? parseInt(quoteData.outAmount) / 10 ** TOKEN_DECIMALS
+      : 0;
 
     res.json({ success: true, data: { price } });
   } catch (error) {
@@ -288,8 +313,91 @@ app.get('/api/token-price', async (req, res) => {
 });
 
 /**
+ * GET /api/token-chart-data
+ * Get historical OHLCV price data from Birdeye for candlestick chart
+ * Query params:
+ *   - timeframe: '1h', '6h', '1d', etc. (default: '6h')
+ *   - days: number of days to fetch (default: 7)
+ */
+app.get('/api/token-chart-data', async (req, res) => {
+  try {
+    const { timeframe = '6h', days = 7 } = req.query;
+
+    // Calculate time range (unix timestamps in seconds)
+    const time_to = Math.floor(Date.now() / 1000);
+    const time_from = time_to - (parseInt(days) * 24 * 60 * 60);
+
+    // Check if API key is configured
+    if (!process.env.BIRDEYE_API_KEY) {
+      console.warn('BIRDEYE_API_KEY not configured, returning empty chart data');
+      return res.json({
+        success: true,
+        data: {
+          items: [],
+          timeframe,
+          time_from,
+          time_to,
+          error: 'BIRDEYE_API_KEY not configured'
+        }
+      });
+    }
+
+    // Call Birdeye API
+    const birdeyeUrl = 'https://public-api.birdeye.so/defi/ohlcv';
+    const params = new URLSearchParams({
+      address: MINT_ADDRESS,
+      type: timeframe,
+      time_from: time_from.toString(),
+      time_to: time_to.toString(),
+      currency: 'usd'
+    });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    const response = await fetch(`${birdeyeUrl}?${params}`, {
+      method: 'GET',
+      headers: {
+        'x-api-key': process.env.BIRDEYE_API_KEY,
+        'x-chain': 'solana',
+        'Accept': 'application/json'
+      },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Birdeye API error:', response.status, errorText);
+      throw new Error(`Birdeye API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Extract OHLCV items
+    const chartData = data.data?.items || [];
+
+    res.json({
+      success: true,
+      data: {
+        items: chartData,
+        timeframe,
+        time_from,
+        time_to
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching chart data:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch chart data'
+    });
+  }
+});
+
+/**
  * GET /api/quote
- * Get swap quote from Jupiter API
+ * Get swap quote from Jupiter Ultra API
  * Query params: { type: 'buy'|'sell', amount }
  * - type='buy': amount is SOL to spend
  * - type='sell': amount is HELL to sell
@@ -327,7 +435,6 @@ app.get('/api/quote', async (req, res) => {
       const mockOutputAmount = type === 'buy'
         ? amountNumber * 150 // 1 SOL = 150 USDC (mock rate)
         : amountNumber / 150; // 150 USDC = 1 SOL (mock rate)
-
       return res.json({
         success: true,
         data: {
@@ -348,23 +455,31 @@ app.get('/api/quote', async (req, res) => {
       ? Math.floor(amountNumber * 1e9) // SOL has 9 decimals
       : Math.floor(amountNumber * 10 ** TOKEN_DECIMALS);
 
-    const quoteUrl = new URL('https://quote-api.jup.ag/v6/quote');
-    quoteUrl.searchParams.append('inputMint', inputMint);
-    quoteUrl.searchParams.append('outputMint', outputMint);
-    quoteUrl.searchParams.append('amount', inputAmount.toString());
-    quoteUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    // Use Jupiter Ultra API
+    const orderUrl = new URL('https://api.jup.ag/ultra/v1/order');
+    orderUrl.searchParams.append('inputMint', inputMint);
+    orderUrl.searchParams.append('outputMint', outputMint);
+    orderUrl.searchParams.append('amount', inputAmount.toString());
+    orderUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    orderUrl.searchParams.append('onlyQuote', 'true'); // Only get quote, don't create order
+
+    const headers = {};
     if (JUPITER_API_KEY) {
-      quoteUrl.searchParams.append('api-key', JUPITER_API_KEY);
+      headers['x-api-key'] = JUPITER_API_KEY;
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased timeout
 
-    const response = await fetch(quoteUrl.toString(), { signal: controller.signal });
+    const response = await fetch(orderUrl.toString(), {
+      headers,
+      signal: controller.signal
+    });
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`Jupiter API error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Jupiter Ultra API error: ${response.status} - ${errorText}`);
     }
 
     const quoteData = await response.json();
@@ -394,7 +509,7 @@ app.get('/api/quote', async (req, res) => {
 
 /**
  * POST /api/prepare-buy
- * Prepare a buy transaction (SOL -> Token) via Jupiter
+ * Prepare a buy transaction (SOL -> Token) via Jupiter Ultra API
  * Body: { walletAddress, amount }
  */
 app.post('/api/prepare-buy', async (req, res) => {
@@ -441,49 +556,41 @@ app.post('/api/prepare-buy', async (req, res) => {
 
     const inputAmount = Math.floor(amount * 1e9); // SOL has 9 decimals
 
-    // Get quote from Jupiter
-    const quoteUrl = new URL('https://quote-api.jup.ag/v6/quote');
-    quoteUrl.searchParams.append('inputMint', SOL_MINT);
-    quoteUrl.searchParams.append('outputMint', MINT_ADDRESS);
-    quoteUrl.searchParams.append('amount', inputAmount.toString());
-    quoteUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    // Use Jupiter Ultra API - single call to get both quote and transaction
+    const orderUrl = new URL('https://api.jup.ag/ultra/v1/order');
+    orderUrl.searchParams.append('inputMint', SOL_MINT);
+    orderUrl.searchParams.append('outputMint', MINT_ADDRESS);
+    orderUrl.searchParams.append('amount', inputAmount.toString());
+    orderUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    orderUrl.searchParams.append('taker', walletAddress);
+    orderUrl.searchParams.append('wrapAndUnwrapSol', 'true');
+    orderUrl.searchParams.append('dynamicComputeUnitLimit', 'true');
+    orderUrl.searchParams.append('prioritizationFeeLamports', 'auto');
+
+    const headers = { 'Content-Type': 'application/json' };
     if (JUPITER_API_KEY) {
-      quoteUrl.searchParams.append('api-key', JUPITER_API_KEY);
+      headers['x-api-key'] = JUPITER_API_KEY;
     }
 
-    const quoteResponse = await fetch(quoteUrl.toString());
-    if (!quoteResponse.ok) {
-      throw new Error(`Jupiter quote error: ${quoteResponse.status}`);
-    }
-    const quoteData = await quoteResponse.json();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased timeout
 
-    // Get swap transaction from Jupiter
-    const swapUrl = new URL('https://quote-api.jup.ag/v6/swap');
-    if (JUPITER_API_KEY) {
-      swapUrl.searchParams.append('api-key', JUPITER_API_KEY);
-    }
-    const swapRequestBody = {
-      quoteResponse: quoteData,
-      userPublicKey: walletAddress,
-      wrapAndUnwrapSol: true,
-      dynamicComputeUnitLimit: true,
-      prioritizationFeeLamports: 'auto'
-    };
-
-    const swapResponse = await fetch(swapUrl.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(swapRequestBody)
+    const response = await fetch(orderUrl.toString(), {
+      method: 'GET',
+      headers,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
-    if (!swapResponse.ok) {
-      throw new Error(`Jupiter swap error: ${swapResponse.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Jupiter Ultra API error: ${response.status} - ${errorText}`);
     }
 
-    const swapData = await swapResponse.json();
+    const orderData = await response.json();
 
     // Parse the swap transaction
-    const swapTransactionBuf = Buffer.from(swapData.swapTransaction, 'base64');
+    const swapTransactionBuf = Buffer.from(orderData.transaction, 'base64');
     const transaction = Transaction.from(swapTransactionBuf);
 
     // Get latest blockhash
@@ -499,7 +606,7 @@ app.post('/api/prepare-buy', async (req, res) => {
     const transactionBase64 = serializedTx.toString('base64');
 
     // Calculate expected output
-    const expectedOutput = parseInt(quoteData.outAmount) / 10 ** TOKEN_DECIMALS;
+    const expectedOutput = parseInt(orderData.outAmount) / 10 ** TOKEN_DECIMALS;
 
     res.json({
       success: true,
@@ -520,7 +627,7 @@ app.post('/api/prepare-buy', async (req, res) => {
 
 /**
  * POST /api/prepare-sell
- * Prepare a sell transaction (Token -> SOL) via Jupiter
+ * Prepare a sell transaction (Token -> SOL) via Jupiter Ultra API
  * Body: { walletAddress, amount }
  */
 app.post('/api/prepare-sell', async (req, res) => {
@@ -567,49 +674,41 @@ app.post('/api/prepare-sell', async (req, res) => {
 
     const inputAmount = Math.floor(amount * 10 ** TOKEN_DECIMALS);
 
-    // Get quote from Jupiter
-    const quoteUrl = new URL('https://quote-api.jup.ag/v6/quote');
-    quoteUrl.searchParams.append('inputMint', MINT_ADDRESS);
-    quoteUrl.searchParams.append('outputMint', SOL_MINT);
-    quoteUrl.searchParams.append('amount', inputAmount.toString());
-    quoteUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    // Use Jupiter Ultra API - single call to get both quote and transaction
+    const orderUrl = new URL('https://api.jup.ag/ultra/v1/order');
+    orderUrl.searchParams.append('inputMint', MINT_ADDRESS);
+    orderUrl.searchParams.append('outputMint', SOL_MINT);
+    orderUrl.searchParams.append('amount', inputAmount.toString());
+    orderUrl.searchParams.append('slippageBps', '100'); // 1% slippage
+    orderUrl.searchParams.append('taker', walletAddress);
+    orderUrl.searchParams.append('wrapAndUnwrapSol', 'true');
+    orderUrl.searchParams.append('dynamicComputeUnitLimit', 'true');
+    orderUrl.searchParams.append('prioritizationFeeLamports', 'auto');
+
+    const headers = { 'Content-Type': 'application/json' };
     if (JUPITER_API_KEY) {
-      quoteUrl.searchParams.append('api-key', JUPITER_API_KEY);
+      headers['x-api-key'] = JUPITER_API_KEY;
     }
 
-    const quoteResponse = await fetch(quoteUrl.toString());
-    if (!quoteResponse.ok) {
-      throw new Error(`Jupiter quote error: ${quoteResponse.status}`);
-    }
-    const quoteData = await quoteResponse.json();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased timeout
 
-    // Get swap transaction from Jupiter
-    const swapUrl = new URL('https://quote-api.jup.ag/v6/swap');
-    if (JUPITER_API_KEY) {
-      swapUrl.searchParams.append('api-key', JUPITER_API_KEY);
-    }
-    const swapRequestBody = {
-      quoteResponse: quoteData,
-      userPublicKey: walletAddress,
-      wrapAndUnwrapSol: true,
-      dynamicComputeUnitLimit: true,
-      prioritizationFeeLamports: 'auto'
-    };
-
-    const swapResponse = await fetch(swapUrl.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(swapRequestBody)
+    const response = await fetch(orderUrl.toString(), {
+      method: 'GET',
+      headers,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
-    if (!swapResponse.ok) {
-      throw new Error(`Jupiter swap error: ${swapResponse.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Jupiter Ultra API error: ${response.status} - ${errorText}`);
     }
 
-    const swapData = await swapResponse.json();
+    const orderData = await response.json();
 
     // Parse the swap transaction
-    const swapTransactionBuf = Buffer.from(swapData.swapTransaction, 'base64');
+    const swapTransactionBuf = Buffer.from(orderData.transaction, 'base64');
     const transaction = Transaction.from(swapTransactionBuf);
 
     // Get latest blockhash
@@ -625,7 +724,7 @@ app.post('/api/prepare-sell', async (req, res) => {
     const transactionBase64 = serializedTx.toString('base64');
 
     // Calculate expected output
-    const expectedOutput = parseInt(quoteData.outAmount) / 1e9; // SOL has 9 decimals
+    const expectedOutput = parseInt(orderData.outAmount) / 1e9; // SOL has 9 decimals
 
     res.json({
       success: true,

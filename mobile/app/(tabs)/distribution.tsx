@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
+import { useLanguage } from '../../contexts/LanguageContext';
 import api, { TokenHolder } from '../../services/api';
 import { isUnderworldAddress } from '../../utils/addressTransform';
 
@@ -34,6 +35,8 @@ const NAME_MAPPINGS: Record<string, { name: string; color: string }> = {
 };
 
 export default function DistributionScreen() {
+  const { t } = useLanguage();
+
   const [loading, setLoading] = useState(true);
   const [distributionData, setDistributionData] = useState<DistributionData[]>([]);
   const [topHolders, setTopHolders] = useState<TokenHolder[]>([]);
@@ -77,21 +80,21 @@ export default function DistributionScreen() {
 
     return [
       {
-        name: 'pump.fun Pool',
+        name: t('distribution.pumpFunPool'),
         amount: Math.round((pumpFunAmount / total) * 100),
         color: '#FF6384',
         legendFontColor: '#fff',
         legendFontSize: 12,
       },
       {
-        name: 'Underworld',
+        name: t('distribution.underworld'),
         amount: Math.round((underworldAmount / total) * 100),
         color: '#36A2EB',
         legendFontColor: '#fff',
         legendFontSize: 12,
       },
       {
-        name: 'Real World',
+        name: t('distribution.realWorld'),
         amount: Math.round((realWorldAmount / total) * 100),
         color: '#FFCE56',
         legendFontColor: '#fff',
@@ -107,21 +110,21 @@ export default function DistributionScreen() {
     }
 
     if (isUnderworldAddress(address)) {
-      return { category: 'Underworld Holdings', color: '#36A2EB' };
+      return { category: t('distribution.underworldHoldings'), color: '#36A2EB' };
     }
 
     if (address === '89i8GFzzmda7m8ks9eTdWk12vLQqL2dXeEyZHKsW7Yso') {
-      return { category: 'Developer Holdings', color: '#FFCE56' };
+      return { category: t('distribution.developerHoldings'), color: '#FFCE56' };
     }
 
-    return { category: 'Real World Holdings', color: '#FFCE56' };
+    return { category: t('distribution.realWorldHoldings'), color: '#FFCE56' };
   };
 
   if (loading) {
     return (
       <View className="flex-1 bg-hell-green justify-center items-center">
         <ActivityIndicator size="large" color="#fff" />
-        <Text className="text-white mt-4">Loading distribution data...</Text>
+        <Text className="text-white mt-4">{t('distribution.loading')}</Text>
       </View>
     );
   }
@@ -130,7 +133,7 @@ export default function DistributionScreen() {
     <ScrollView className="flex-1 bg-[#002200]">
       <View className="py-8 px-4">
         <Text className="text-3xl font-bold text-white text-center mb-8">
-          Token Distribution
+          {t('distribution.title')}
         </Text>
 
         {/* Pie Chart */}
@@ -151,15 +154,15 @@ export default function DistributionScreen() {
 
         {/* Deadboard / Leaderboard */}
         <Text className="text-2xl font-bold text-white text-center mb-6">
-          Deadboard
+          {t('distribution.deadboard')}
         </Text>
 
         <View className="bg-gray-800 rounded-lg overflow-hidden">
           {/* Header */}
           <View className="flex-row bg-gray-700 py-3 px-4">
-            <Text className="text-gray-300 text-xs font-medium w-12">Rank</Text>
-            <Text className="text-gray-300 text-xs font-medium flex-1">Address</Text>
-            <Text className="text-gray-300 text-xs font-medium text-right w-24">Amount</Text>
+            <Text className="text-gray-300 text-xs font-medium w-12">{t('distribution.rank')}</Text>
+            <Text className="text-gray-300 text-xs font-medium flex-1">{t('distribution.address')}</Text>
+            <Text className="text-gray-300 text-xs font-medium text-right w-24">{t('distribution.amount')}</Text>
           </View>
 
           {/* Rows */}

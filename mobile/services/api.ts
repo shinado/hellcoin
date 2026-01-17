@@ -11,9 +11,10 @@ const getBackendUrl = () => {
   if (process.env.EXPO_PUBLIC_BACKEND_URL) {
     return process.env.EXPO_PUBLIC_BACKEND_URL;
   }
-  // Development default
+  // Development default - use local IP address for mobile device testing
+  // Replace 192.168.1.X with your computer's actual local IP address
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    return 'http://localhost:3000';
+    return 'http://192.168.31.23:3000';
   }
   // Production URL - Railway deployed backend
   return 'https://hellcoin-production-4fa8.up.railway.app';
@@ -55,6 +56,22 @@ export interface PrepareTradeResponse {
   inputMint: string;
   outputMint: string;
   testMode?: boolean;
+}
+
+export interface ChartDataPoint {
+  unixTime: number;
+  o: number;  // Open price
+  h: number;  // High price
+  l: number;  // Low price
+  c: number;  // Close price
+  v: number;  // Volume
+}
+
+export interface ChartDataResponse {
+  items: ChartDataPoint[];
+  timeframe: string;
+  time_from: number;
+  time_to: number;
 }
 
 class ApiService {
@@ -291,6 +308,40 @@ class ApiService {
       outputMint: result.data.outputMint,
       testMode: result.data.testMode,
     };
+  }
+
+  /**
+   * Get historical OHLCV chart data from Birdeye API via backend
+   * @param timeframe - Time interval for candles (e.g., '1h', '6h', '1d')
+   * @param days - Number of days of historical data to fetch
+   */
+  async getChartData(timeframe: string = '6h', days: number = 7): Promise<ChartDataResponse> {
+    try {
+      const params = new URLSearchParams({
+        timeframe: timeframe,
+        days: days.toString()
+      });
+
+      const response = await this.fetchWithErrorHandling(
+        `${BACKEND_URL}/api/token-chart-data?${params.toString()}`
+      );
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch chart data');
+      }
+
+      return result.data;
+    } catch (error: any) {
+      console.error('Error fetching chart data:', error);
+      // Return empty data instead of throwing to allow graceful degradation
+      return {
+        items: [],
+        timeframe,
+        time_from: 0,
+        time_to: 0
+      };
+    }
   }
 }
 

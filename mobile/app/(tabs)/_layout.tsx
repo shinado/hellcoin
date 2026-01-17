@@ -1,7 +1,9 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs, Link } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { useLanguage } from '../../contexts/LanguageContext';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -11,6 +13,8 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
+  const { t } = useLanguage();
+
   return (
     <Tabs
       screenOptions={{
@@ -25,25 +29,28 @@ export default function TabLayout() {
         },
         headerTintColor: '#fff',
           headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                  color="#fff"
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
+            <View className="flex-row items-center mr-4">
+              <LanguageSwitcher />
+              <Link href="/modal" asChild>
+                <Pressable className="ml-2">
+                  {({ pressed }) => (
+                    <FontAwesome
+                      name="info-circle"
+                      size={25}
+                      color="#fff"
+                      style={{ opacity: pressed ? 0.5 : 1 }}
+                    />
+                  )}
+                </Pressable>
+              </Link>
+            </View>
           ),
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Burn',
+          title: t('tabs.burn'),
           headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="fire" color={color} />,
         }}
@@ -51,21 +58,21 @@ export default function TabLayout() {
       <Tabs.Screen
         name="distribution"
         options={{
-          title: 'Distribution',
+          title: t('tabs.distribution'),
           tabBarIcon: ({ color }) => <TabBarIcon name="pie-chart" color={color} />,
         }}
       />
       <Tabs.Screen
         name="token"
         options={{
-          title: 'Buy $HELL',
+          title: t('tabs.buy'),
           tabBarIcon: ({ color }) => <TabBarIcon name="dollar" color={color} />,
         }}
       />
       <Tabs.Screen
         name="blog"
         options={{
-          title: 'Blog',
+          title: t('tabs.blog'),
           headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="newspaper-o" color={color} />,
         }}

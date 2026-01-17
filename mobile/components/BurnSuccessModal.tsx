@@ -7,6 +7,7 @@ import {
   Image,
   Linking,
 } from 'react-native';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface BurnSuccessModalProps {
   visible: boolean;
@@ -25,6 +26,8 @@ export default function BurnSuccessModal({
   signature,
   onClose,
 }: BurnSuccessModalProps) {
+  const { t } = useLanguage();
+
   const openSolscan = () => {
     Linking.openURL(`https://solscan.io/address/${address}`);
   };
@@ -44,18 +47,21 @@ export default function BurnSuccessModal({
               className="w-32 h-32 mb-4"
               resizeMode="contain"
             />
-            
+
             <Text className="text-3xl font-bold text-white text-center mb-4">
-              R.I.P. {name}
+              {t('burnSuccess.rip', { name })}
             </Text>
-            
+
             <Text className="text-gray-300 text-center mb-2">
-              You just burnt {parseFloat(amount).toLocaleString()} $HELL to {name} in the underworld.
+              {t('burnSuccess.message', {
+                amount: parseFloat(amount).toLocaleString(),
+                name,
+              })}
             </Text>
-            
+
             <TouchableOpacity onPress={openSolscan}>
               <Text className="text-gray-400 text-xs text-center underline" numberOfLines={2}>
-                (address: {address})
+                ({t('burnSuccess.addressLabel', { address })})
               </Text>
             </TouchableOpacity>
           </View>
@@ -64,7 +70,7 @@ export default function BurnSuccessModal({
             className="bg-red-500 py-3 px-6 rounded-lg mt-6"
             onPress={onClose}
           >
-            <Text className="text-white font-bold text-center">Close</Text>
+            <Text className="text-white font-bold text-center">{t('common.close')}</Text>
           </TouchableOpacity>
         </View>
       </View>

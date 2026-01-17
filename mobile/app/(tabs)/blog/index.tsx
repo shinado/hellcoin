@@ -7,9 +7,12 @@ import {
   Image,
 } from 'react-native';
 import { Link } from 'expo-router';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { getAllPosts, BlogPost } from '../../../data/posts';
 
 function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
+  const { t } = useLanguage();
+
   return (
     <Link href={`/blog/${post.slug}`} asChild>
       <TouchableOpacity
@@ -24,10 +27,10 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
             resizeMode="cover"
           />
         )}
-        
+
         {featured && (
           <View className="absolute top-4 right-4 bg-amber-900/60 px-3 py-1 rounded-full">
-            <Text className="text-amber-200 text-sm">Featured</Text>
+            <Text className="text-amber-200 text-sm">{t('blog.featured')}</Text>
           </View>
         )}
 
@@ -67,7 +70,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
                 />
               )}
               <Text className="text-gray-300 text-sm">
-                {post.author?.name || 'Unknown'}
+                {post.author?.name || t('blog.unknown')}
               </Text>
             </View>
 
@@ -81,7 +84,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
               </Text>
               {post.readingTime && (
                 <Text className="text-gray-400 text-sm ml-2">
-                  • {post.readingTime} min
+                  • {t('blog.readingTime', { time: post.readingTime })}
                 </Text>
               )}
             </View>
@@ -93,6 +96,8 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
 }
 
 export default function BlogListScreen() {
+  const { t } = useLanguage();
+
   const allPosts = getAllPosts();
   const featuredPosts = allPosts.filter((post) => post.featured);
   const regularPosts = allPosts.filter((post) => !post.featured);
@@ -104,7 +109,7 @@ export default function BlogListScreen() {
         {featuredPosts.length > 0 && (
           <View className="mb-6">
             <Text className="text-2xl font-bold text-white mb-4">
-              Featured Posts
+              {t('blog.featuredPosts')}
             </Text>
             {featuredPosts.map((post) => (
               <PostCard key={post.slug} post={post} featured />
@@ -114,7 +119,7 @@ export default function BlogListScreen() {
 
         {/* All Posts */}
         <View>
-          <Text className="text-2xl font-bold text-white mb-4">All Posts</Text>
+          <Text className="text-2xl font-bold text-white mb-4">{t('blog.allPosts')}</Text>
           {regularPosts.map((post) => (
             <PostCard key={post.slug} post={post} />
           ))}

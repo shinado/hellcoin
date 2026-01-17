@@ -16,6 +16,7 @@ import { Video, ResizeMode } from 'expo-av';
 import { Transaction } from '@solana/web3.js';
 import { transact, Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 import { useWallet } from '../../contexts/WalletContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import api from '../../services/api';
 import { transformToDeadAddress } from '../../utils/addressTransform';
 import BurnSuccessModal from '../../components/BurnSuccessModal';
@@ -28,7 +29,8 @@ const APP_IDENTITY = {
 
 export default function BurnScreen() {
   const wallet = useWallet();
-  
+  const { t } = useLanguage();
+
   const [personName, setPersonName] = useState('');
   const [amount, setAmount] = useState('');
   const [transformedAddress, setTransformedAddress] = useState('');
@@ -117,7 +119,7 @@ export default function BurnScreen() {
       let signature = '';
       
       if (Platform.OS === 'web') {
-        Alert.alert('Error', 'Please use a mobile device with a Solana wallet app installed.');
+        Alert.alert('Error', t('alerts.useMobileDevice'));
         setPlayVideo(false);
         setLoading(false);
         return;
@@ -141,7 +143,7 @@ export default function BurnScreen() {
       
     } catch (error: any) {
       console.error('Transaction failed:', error);
-      Alert.alert('Transaction Failed', error.message || 'Please try again.');
+      Alert.alert(t('alerts.transactionFailed'), error.message || t('alerts.pleaseTryAgain'));
       setPlayVideo(false);
     } finally {
       setLoading(false);
@@ -182,10 +184,10 @@ export default function BurnScreen() {
         />
         <View className="bg-black/50 px-6 py-4 rounded-lg">
           <Text className="text-white text-lg text-center">
-            Transferring to the dead...
+            {t('burn.transferring')}
           </Text>
           <Text className="text-gray-300 text-sm text-center mt-2">
-            Waiting for Bank of Hell to confirm...
+            {t('burn.waitingConfirmation')}
           </Text>
           <ActivityIndicator color="#fff" className="mt-4" />
         </View>
@@ -207,42 +209,42 @@ export default function BurnScreen() {
         >
           <View className="flex-1 justify-center items-center px-6 py-12">
             <Text className="text-7xl font-extrabold text-white text-center">
-              Hellcoin
+              {t('burn.title')}
             </Text>
             <Text className="text-lg text-white text-center mt-2">
-              The meme coin burning hyperinflation in hell 🔥
+              {t('burn.subtitle')}
             </Text>
             <Text className="text-sm text-gray-400 text-center mt-1">
-              Don't have Hellcoin yet? Get $HELL from{' '}
+              {t('burn.getStarted')}{' '}
               <Link href="/token" asChild>
-                <Text className="text-blue-400">pump.fun</Text>
+                <Text className="text-blue-400">{t('burn.pumpFun')}</Text>
               </Link>
             </Text>
 
             <View className="w-full max-w-md mt-8">
               {/* Burn To Input */}
               <View className="mb-4">
-                <Text className="text-white font-bold mb-2">Burn to</Text>
+                <Text className="text-white font-bold mb-2">{t('burn.burnTo')}</Text>
                 <TextInput
                   className="bg-gray-600 text-white p-4 rounded-lg w-full"
-                  placeholder="Kobe Bryant RIP🕯️"
+                  placeholder={t('burn.burnToPlaceholder')}
                   placeholderTextColor="#9CA3AF"
                   value={personName}
                   onChangeText={setPersonName}
                 />
                 {transformedAddress ? (
                   <Text className="text-gray-300 text-xs mt-2" numberOfLines={2}>
-                    Address: {transformedAddress}
+                    {t('burn.address')}: {transformedAddress}
                   </Text>
                 ) : null}
               </View>
 
               {/* Amount Input */}
               <View className="mb-4">
-                <Text className="text-white font-bold mb-2">Amount</Text>
+                <Text className="text-white font-bold mb-2">{t('burn.amount')}</Text>
                 <TextInput
                   className="bg-gray-600 text-white p-4 rounded-lg w-full"
-                  placeholder="100,000"
+                  placeholder={t('burn.amountPlaceholder')}
                   placeholderTextColor="#9CA3AF"
                   keyboardType="numeric"
                   value={amount}
@@ -250,17 +252,17 @@ export default function BurnScreen() {
                 />
                 {usdValue ? (
                   <Text className="text-gray-300 text-sm mt-2">
-                    ≈ ${usdValue} USD
+                    {t('burn.usdValue', { value: usdValue })}
                   </Text>
                 ) : null}
                 {hasInsufficientBalance ? (
                   <Text className="text-red-500 text-sm mt-1">
-                    ✕ Insufficient balance
+                    {t('burn.insufficientBalance')}
                   </Text>
                 ) : null}
                 {wallet.connected && tokenBalance !== null ? (
                   <Text className="text-white text-sm mt-1">
-                    Your Balance: {tokenBalance.toLocaleString()} $HELL
+                    {t('burn.yourBalance', { balance: tokenBalance.toLocaleString() })}
                   </Text>
                 ) : null}
               </View>
@@ -276,7 +278,7 @@ export default function BurnScreen() {
                     <ActivityIndicator color="#fff" />
                   ) : (
                     <Text className="text-white font-bold text-center text-lg">
-                      Connect Wallet
+                      {t('burn.connectWallet')}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -288,7 +290,7 @@ export default function BurnScreen() {
                       {wallet.publicKey?.toString().slice(-4)}
                     </Text>
                     <TouchableOpacity onPress={wallet.disconnect}>
-                      <Text className="text-red-400 text-sm">Disconnect</Text>
+                      <Text className="text-red-400 text-sm">{t('burn.disconnect')}</Text>
                     </TouchableOpacity>
                   </View>
                   <TouchableOpacity
@@ -302,7 +304,7 @@ export default function BurnScreen() {
                       <ActivityIndicator color="#fff" />
                     ) : (
                       <Text className="text-white font-bold text-center text-lg">
-                        Transfer
+                        {t('burn.transfer')}
                       </Text>
                     )}
                   </TouchableOpacity>

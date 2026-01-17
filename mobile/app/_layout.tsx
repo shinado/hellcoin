@@ -12,6 +12,7 @@ import 'react-native-reanimated';
 
 import "../global.css";
 import { WalletProvider } from '../contexts/WalletContext';
+import { LanguageProvider } from '../contexts/LanguageContext';
 
 export {
   ErrorBoundary,
@@ -73,19 +74,21 @@ export default function RootLayout() {
 function RootLayoutNav() {
   console.log('RootLayoutNav rendering');
   return (
-    <WalletProvider>
-      <ThemeProvider value={DarkTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen 
-            name="modal" 
-            options={{ 
-              presentation: 'modal',
-              title: 'About Hellcoin',
-            }} 
-          />
-        </Stack>
-      </ThemeProvider>
-    </WalletProvider>
+    <LanguageProvider>
+      <WalletProvider>
+        <ThemeProvider value={DarkTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options={{
+                presentation: 'modal',
+                title: 'About Hellcoin',
+              }}
+            />
+          </Stack>
+        </ThemeProvider>
+      </WalletProvider>
+    </LanguageProvider>
   );
 }

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import {
   AccountLayout,
   TOKEN_PROGRAM_ID,
@@ -437,26 +437,6 @@ app.get('/api/quote', async (req, res) => {
       outputMint = SOL_MINT;
     }
 
-    // TEST MODE: Return mock data
-    if (TEST_MODE) {
-      const mockOutputAmount = type === 'buy'
-        ? amountNumber * 150 // 1 SOL = 150 USDC (mock rate)
-        : amountNumber / 150; // 150 USDC = 1 SOL (mock rate)
-      return res.json({
-        success: true,
-        data: {
-          type,
-          inputAmount: amountNumber,
-          outputAmount: mockOutputAmount,
-          inputMint,
-          outputMint,
-          priceImpactPct: '0.001',
-          routePlan: [],
-          testMode: true
-        }
-      });
-    }
-
     // Convert amount to smallest unit (lamports for SOL, token decimals for Token)
     const inputAmount = type === 'buy'
       ? Math.floor(amountNumber * 1e9) // SOL has 9 decimals
@@ -596,21 +576,12 @@ app.post('/api/prepare-buy', async (req, res) => {
 
     const orderData = await response.json();
 
-    // Parse the swap transaction
-    const swapTransactionBuf = Buffer.from(orderData.transaction, 'base64');
-    const transaction = Transaction.from(swapTransactionBuf);
+    // Jupiter returns a versioned transaction - pass it through directly
+    // The mobile app will handle the blockhash update and signing
+    const transactionBase64 = orderData.transaction;
 
-    // Get latest blockhash
+    // Get the current blockhash for reference
     const { blockhash } = await connection.getLatestBlockhash('max');
-    transaction.recentBlockhash = blockhash;
-
-    // Re-serialize with updated blockhash
-    const serializedTx = transaction.serialize({
-      requireAllSignatures: false,
-      verifySignatures: false
-    });
-
-    const transactionBase64 = serializedTx.toString('base64');
 
     // Calculate expected output
     const expectedOutput = parseInt(orderData.outAmount) / 10 ** TOKEN_DECIMALS;
@@ -714,21 +685,12 @@ app.post('/api/prepare-sell', async (req, res) => {
 
     const orderData = await response.json();
 
-    // Parse the swap transaction
-    const swapTransactionBuf = Buffer.from(orderData.transaction, 'base64');
-    const transaction = Transaction.from(swapTransactionBuf);
+    // Jupiter returns a versioned transaction - pass it through directly
+    // The mobile app will handle the blockhash update and signing
+    const transactionBase64 = orderData.transaction;
 
-    // Get latest blockhash
+    // Get the current blockhash for reference
     const { blockhash } = await connection.getLatestBlockhash('max');
-    transaction.recentBlockhash = blockhash;
-
-    // Re-serialize with updated blockhash
-    const serializedTx = transaction.serialize({
-      requireAllSignatures: false,
-      verifySignatures: false
-    });
-
-    const transactionBase64 = serializedTx.toString('base64');
 
     // Calculate expected output
     const expectedOutput = parseInt(orderData.outAmount) / 1e9; // SOL has 9 decimals

@@ -10,8 +10,8 @@ const i18n = new I18n({
 });
 
 // Set the locale once at the beginning of your app.
-i18n.locale = 'en';
-i18n.defaultLocale = 'en';
+i18n.locale = 'zh';
+i18n.defaultLocale = 'zh';
 
 export const setLocale = (locale: string) => {
   i18n.locale = locale;

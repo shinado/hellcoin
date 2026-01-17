@@ -2,7 +2,7 @@
 // - Direct Solana RPC calls for token holders, balance, transfers
 // - Backend proxy for Jupiter API calls (price, quotes, swaps)
 
-import { Transaction } from '@solana/web3.js';
+import { Transaction, VersionedTransaction } from '@solana/web3.js';
 import { rpcService } from './rpc';
 
 // Backend API URL - configure for different environments
@@ -32,6 +32,8 @@ export interface PrepareTransferResponse {
   recentBlockhash: string;
 }
 
+export type VersionedTransactionResponse = VersionedTransaction;
+
 export interface TokenBalanceResponse {
   balance: number;
 }
@@ -48,7 +50,7 @@ export interface QuoteResponse {
 }
 
 export interface PrepareTradeResponse {
-  transaction: Transaction;
+  transaction: VersionedTransaction;
   recentBlockhash: string;
   inputAmount: number;
   expectedOutput: number;
@@ -254,9 +256,9 @@ class ApiService {
       throw new Error(result.error || 'Failed to prepare buy transaction');
     }
 
-    // Deserialize transaction from base64
+    // Deserialize versioned transaction from base64
     const transactionBuf = Buffer.from(result.data.transaction, 'base64');
-    const transaction = Transaction.from(transactionBuf);
+    const transaction = VersionedTransaction.deserialize(transactionBuf);
 
     return {
       transaction,
@@ -294,9 +296,9 @@ class ApiService {
       throw new Error(result.error || 'Failed to prepare sell transaction');
     }
 
-    // Deserialize transaction from base64
+    // Deserialize versioned transaction from base64
     const transactionBuf = Buffer.from(result.data.transaction, 'base64');
-    const transaction = Transaction.from(transactionBuf);
+    const transaction = VersionedTransaction.deserialize(transactionBuf);
 
     return {
       transaction,

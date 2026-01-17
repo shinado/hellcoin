@@ -29,7 +29,7 @@ const APP_IDENTITY = {
 
 export default function BurnScreen() {
   const wallet = useWallet();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   const [personName, setPersonName] = useState('');
   const [amount, setAmount] = useState('');
@@ -208,6 +208,27 @@ export default function BurnScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-1 justify-center items-center px-6 py-12">
+            {/* Header with X link and language switcher */}
+            <View className="w-full flex-row justify-between items-center mb-6">
+              {/* X Account Link */}
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://x.com/hellcoin_money')}
+                className="flex-row items-center"
+              >
+                <Text className="text-blue-400 text-xl font-bold">@hellcoin_money</Text>
+              </TouchableOpacity>
+
+              {/* Language Switcher */}
+              <TouchableOpacity
+                onPress={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+                className="bg-gray-700 px-4 py-2 rounded-lg"
+              >
+                <Text className="text-white font-bold">
+                  {language === 'en' ? '中文' : 'EN'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             <Text className="text-7xl font-extrabold text-white text-center">
               {t('burn.title')}
             </Text>
